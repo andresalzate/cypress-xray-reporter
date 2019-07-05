@@ -37,7 +37,7 @@ var mocha = new Mocha({
 ```
 
 ### `addTags` option
-- If set to true, will parse the test title for tags in format `@tagName=tagValue` and will add them as attribute of the test XML element. It will also clean the outputted tags from the test name XML attribute.
+- If set to true, will parse the test title for tags in format `@tagName=tagValue` and will add them as attributes of the test XML element AND as their own `<trait>` elements. It will also clean the outputted tags from the test name XML attribute.
 - See example below:
 ```
 var mocha = new Mocha({
@@ -48,9 +48,15 @@ var mocha = new Mocha({
     }
 });
 ```
-Given a test with title 'test should behave like so @aid=EPM-DP-C1234 @sid=EPM-1234 @type=Integration', the outputted test element will look as follows:
+Given a test with title 'test should behave like so @aid=EPM-DP-C1234 @sid=EPM-1234 @type="Integration Type"', the outputted test element will look as follows:
 ```
-<test name="test should behave like so" aid="EPM-DP-C1234" sid="EPM-1234" type="Integration" />
+<test name="test should behave like so" aid="EPM-DP-C1234" sid="EPM-1234" type="Integration Type">
+  <traits>
+    <trait name="aid" value="EPM-DP-C1234"/>
+    <trait name="sid" value="EPM-1234"/>
+    <trait name="type" value="Integration Type"/>
+  </traits>
+</test>
 ```
 
 ### Full configuration options
