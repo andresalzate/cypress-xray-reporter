@@ -1,27 +1,33 @@
-'use-strict';
+"use-strict";
 
-var xml = require('xml');
-var Base = require('mocha').reporters.Base;
-var fs = require('fs');
-var path = require('path');
-var debug = require('debug')('mocha-xunit-reporter');
-var mkdirp = require('mkdirp');
-var md5 = require('md5');
-var stripAnsi = require('strip-ansi');
+const xml = require("xml");
+const Base = require("mocha").reporters.Base;
+const fs = require("fs");
+const path = require("path");
+const debug = require("debug")("mocha-xunit-reporter");
+const mkdirp = require("mkdirp");
+const md5 = require("md5");
+const stripAnsi = require("strip-ansi");
+
+const STATUS = {
+  PASSED: "pass",
+  FAILED: "fail",
+  SKIPPED: "skip"
+};
 
 module.exports = MochaXUnitReporter;
 
 // A subset of invalid characters as defined in http://www.w3.org/TR/xml/#charsets that can occur in e.g. stacktraces
-var INVALID_CHARACTERS = ['\u001b'];
+var INVALID_CHARACTERS = ["\u001b"];
 
 function configureDefaults(options) {
   debug(options);
   options = options || {};
   options = options.reporterOptions || {};
   options.mochaFile =
-    options.mochaFile || process.env.MOCHA_FILE || 'test-results.xml';
+    options.mochaFile || process.env.MOCHA_FILE || "test-results.xml";
   options.toConsole = !!options.toConsole;
-  options.assemblyName = options.assemblyName || 'Mocha Tests';
+  options.assemblyName = options.assemblyName || "Mocha Tests";
   options.addTags = options.addTags || false;
 
   return options;
@@ -29,7 +35,7 @@ function configureDefaults(options) {
 
 function isInvalidSuite(suite) {
   return (
-    (!suite.root && suite.title === '') ||
+    (!suite.root && suite.title === "") ||
     (suite.tests.length === 0 && suite.suites.length === 0)
   );
 }
@@ -55,7 +61,7 @@ function getTags(testTitle) {
     foundTags.forEach(tag => {
       var parts = tag.match(regexTag);
 
-      result.cleanTitle = result.cleanTitle.replace(tag, '');
+      result.cleanTitle = result.cleanTitle.replace(tag, "");
       if (parts.length > 0) {
         result.tags[parts[1]] = parts[2];
       }
@@ -88,17 +94,17 @@ function MochaXUnitReporter(runner, options) {
 
   // remove old results
   this._runner.on(
-    'start',
+    "start",
     function() {
       if (fs.existsSync(this._options.mochaFile)) {
-        debug('removing report file', this._options.mochaFile);
+        debug("removing report file", this._options.mochaFile);
         fs.unlinkSync(this._options.mochaFile);
       }
     }.bind(this)
   );
 
   this._runner.on(
-    'suite',
+    "suite",
     function(suite) {
       if (!isInvalidSuite(suite)) {
         collections.push(this.getCollectionData(suite));
@@ -107,31 +113,31 @@ function MochaXUnitReporter(runner, options) {
   );
 
   this._runner.on(
-    'pass',
+    "pass",
     function(test) {
-      lastCollection().push(this.getTestData(test, 'passed'));
+      lastCollection().push(this.getTestData(test, STATUS.PASSED));
     }.bind(this)
   );
 
   this._runner.on(
-    'fail',
+    "fail",
     function(test, err) {
-      lastCollection().push(this.getTestData(test, 'failed'));
+      lastCollection().push(this.getTestData(test, STATUS.FAILED));
     }.bind(this)
   );
 
   if (this._options.includePending) {
     this._runner.on(
-      'pending',
+      "pending",
       function(test) {
-        var test = this.getTestData(test, 'skipped');
+        var test = this.getTestData(test, STATUS.SKIPPED);
         lastCollection().push(test);
       }.bind(this)
     );
   }
 
   this._runner.on(
-    'end',
+    "end",
     function() {
       this.flush(collections);
     }.bind(this)
@@ -148,7 +154,7 @@ MochaXUnitReporter.prototype.getCollectionData = function(suite) {
     collection: [
       {
         _attr: {
-          name: suite.title || 'Root Suite',
+          name: suite.title || "Root Suite",
           total: suite.tests.length
         }
       }
@@ -180,7 +186,7 @@ MochaXUnitReporter.prototype.getTestData = function(test, status) {
       {
         _attr: {
           name: name,
-          time: typeof test.duration === 'undefined' ? 0 : test.duration / 1000,
+          time: typeof test.duration === "undefined" ? 0 : test.duration / 1000,
           result: status
         }
       }
@@ -193,7 +199,7 @@ MochaXUnitReporter.prototype.getTestData = function(test, status) {
     };
     testCase.test[1] = trait;
     Object.keys(tagResult.tags).forEach(tagName => {
-      var tagValue = '';
+      var tagValue = "";
       if (tagResult.tags[tagName]) {
         tagValue = tagResult.tags[tagName];
       }
@@ -218,7 +224,7 @@ MochaXUnitReporter.prototype.getTestData = function(test, status) {
  */
 MochaXUnitReporter.prototype.removeInvalidCharacters = function(input) {
   return INVALID_CHARACTERS.reduce(function(text, invalidCharacter) {
-    return text.replace(new RegExp(invalidCharacter, 'g'), '');
+    return text.replace(new RegExp(invalidCharacter, "g"), "");
   }, input);
 };
 
@@ -261,13 +267,13 @@ MochaXUnitReporter.prototype.getXml = function(collections) {
     _collAttr.skipped = 0;
 
     _cases.forEach(function(test) {
-      if (test.test[0]._attr.result == 'skipped') {
+      if (test.test[0]._attr.result === STATUS.SKIPPED) {
         _collAttr.skipped++;
       }
-      if (test.test[0]._attr.result == 'failed') {
+      if (test.test[0]._attr.result === STATUS.FAILED) {
         _collAttr.failed++;
       }
-      if (test.test[0]._attr.result == 'passed') {
+      if (test.test[0]._attr.result === STATUS.PASSED) {
         _collAttr.passed++;
       }
       _collAttr.time += test.test[0]._attr.time;
@@ -292,11 +298,11 @@ MochaXUnitReporter.prototype.getXml = function(collections) {
           failed: totalFailed,
           passed: totalPassed,
           skipped: totalSkipped,
-          'run-date': stats.start.toISOString().split('T')[0],
-          'run-time': stats.start
+          "run-date": stats.start.toISOString().split("T")[0],
+          "run-time": stats.start
             .toISOString()
-            .split('T')[1]
-            .split('.')[0]
+            .split("T")[1]
+            .split(".")[0]
         }
       }
     ].concat(collections)
@@ -306,7 +312,7 @@ MochaXUnitReporter.prototype.getXml = function(collections) {
     {
       assemblies: [assembly]
     },
-    { declaration: true, indent: '  ' }
+    { declaration: true, indent: "  " }
   );
 };
 
@@ -317,18 +323,18 @@ MochaXUnitReporter.prototype.getXml = function(collections) {
  */
 MochaXUnitReporter.prototype.writeXmlToDisk = function(xml, filePath) {
   if (filePath) {
-    if (filePath.indexOf('[hash]') !== -1) {
-      filePath = filePath.replace('[hash]', md5(xml));
+    if (filePath.indexOf("[hash]") !== -1) {
+      filePath = filePath.replace("[hash]", md5(xml));
     }
 
-    debug('writing file to', filePath);
+    debug("writing file to", filePath);
     mkdirp.sync(path.dirname(filePath));
 
     try {
-      fs.writeFileSync(filePath, xml, 'utf-8');
+      fs.writeFileSync(filePath, xml, "utf-8");
     } catch (exc) {
-      debug('problem writing results: ' + exc);
+      debug("problem writing results: " + exc);
     }
-    debug('results written successfully');
+    debug("results written successfully");
   }
 };

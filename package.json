@@ -4,7 +4,9 @@
   "description": "A Mocha xunit reporter",
   "main": "index.js",
   "scripts": {
-    "test": "node_modules/.bin/mocha test --reporter=spec mocha_file=test/mocha.xml"
+    "pretest": "rm -rf test/results.*.xml",
+    "test": "node_modules/.bin/mocha test --reporter=spec mocha_file=test/mocha.xml",
+    "tdd": "yarn test --watch"
   },
   "devDependencies": {
     "chai": "^3.0.0",
