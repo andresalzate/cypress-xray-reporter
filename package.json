@@ -27,17 +27,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/passuied/mocha-xunit-reporter.git"
+    "url": "git+https://github.com/MGMResorts/mocha-xunit-reporter.git"
   },
   "keywords": [
     "mocha",
     "xunit",
     "report"
   ],
-  "author": "Patrick Assuied",
+  "author": "Julian Coy",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/passuied/mocha-xunit-reporter/issues"
+    "url": "https://github.com/MGMResorts/mocha-xunit-reporter/issues"
   },
-  "homepage": "https://github.com/passuied/mocha-xunit-reporter#readme"
+  "homepage": "https://github.com/MGMResorts/mocha-xunit-reporter#readme"
 }
