@@ -317,7 +317,23 @@ describe('mocha-xunit-reporter', () => {
       );
       expect(testCase.test[0]._attr.aid).to.equal('EPM-DP-C1234');
       expect(testCase.test[0]._attr.sid).to.equal('EPM-1234');
+      expect(testCase.test[0]._attr.type).to.equal('Integration');
     });
+
+    it('should generate attributes for addTags=true and tags in test title in quotes', () => {
+      var modTestCase = { ...mockedTestCase };
+      modTestCase.title =
+        'should behave like so @aid="test TAG 1" @sid=\'TEST tag 2\' @type=Integration';
+      reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true });
+      var testCase = reporter.getTestData(modTestCase);
+      expect(testCase.test[0]._attr.name).to.equal(
+        'Super Suite should behave like so'
+      );
+      expect(testCase.test[0]._attr.aid).to.equal('test TAG 1');
+      expect(testCase.test[0]._attr.sid).to.equal('TEST tag 2');
+      expect(testCase.test[0]._attr.type).to.equal('Integration');
+    });
+
 
     it('should still work for addTags=true and tags NOT in test title', () => {
       reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true });
@@ -338,6 +354,26 @@ describe('mocha-xunit-reporter', () => {
       expect(testCase.test[1].traits[1].trait._attr['name']).to.equal('sid');
       expect(testCase.test[1].traits[1].trait._attr['value']).to.equal(
         'EPM-1234'
+      );
+      expect(testCase.test[1].traits[2].trait._attr['name']).to.equal('type');
+      expect(testCase.test[1].traits[2].trait._attr['value']).to.equal(
+        'Integration'
+      );
+    });
+
+    it('should generate traits for addTags=true and tags in test title in quotes', () => {
+      var modTestCase = { ...mockedTestCase };
+      modTestCase.title =
+        'should behave like so @aid="test TAG 1" @sid=\'TEST tag 2\' @type=Integration';
+      reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true });
+      var testCase = reporter.getTestData(modTestCase);
+      expect(testCase.test[1].traits[0].trait._attr['name']).to.equal('aid');
+      expect(testCase.test[1].traits[0].trait._attr['value']).to.equal(
+        'test TAG 1'
+      );
+      expect(testCase.test[1].traits[1].trait._attr['name']).to.equal('sid');
+      expect(testCase.test[1].traits[1].trait._attr['value']).to.equal(
+        'TEST tag 2'
       );
       expect(testCase.test[1].traits[2].trait._attr['name']).to.equal('type');
       expect(testCase.test[1].traits[2].trait._attr['value']).to.equal(
