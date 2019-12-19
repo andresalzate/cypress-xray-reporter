@@ -40,14 +40,11 @@ describe('mocha-xunit-reporter', () => {
       runner.pass(new Test('Foo can weez the juice', 'can weez the juice', 1))
     }
 
+    const { invalidChar } = options
+
     runner.fail(
       new Test('Bar can narfle the garthog', 'can narfle the garthog', 1),
-      {
-        stack:
-          options.invalidChar +
-          'expected garthog to be dead' +
-          options.invalidChar,
-      }
+      { stack: invalidChar + 'expected garthog to be dead' + invalidChar }
     )
 
     runner.fail(
@@ -77,9 +74,9 @@ describe('mocha-xunit-reporter', () => {
   }
 
   function verifyMochaFile(path, options) {
-    var now = new Date().toISOString()
+    const now = new Date().toISOString()
     debug('verify', now)
-    var output = fs.readFileSync(path, 'utf-8')
+    const output = fs.readFileSync(path, 'utf-8')
     expect(output).xml.to.be.valid()
     expect(output).xml.to.equal(mockXml(runner.stats, options))
     fs.unlinkSync(path)
@@ -87,12 +84,12 @@ describe('mocha-xunit-reporter', () => {
   }
 
   function removeTestPath() {
-    var testPath = '/subdir/foo/mocha.xml'
-    var parts = testPath.slice(1).split('/')
+    const testPath = '/subdir/foo/mocha.xml'
+    const parts = testPath.slice(1).split('/')
 
-    parts.reduce(function(testPath) {
+    parts.reduce((testPath) => {
       if (fs.existsSync(__dirname + testPath)) {
-        var removeFile =
+        const removeFile =
           testPath.indexOf('.') === -1 ? 'rmdirSync' : 'unlinkSync'
         fs[removeFile](__dirname + testPath)
       }
@@ -119,35 +116,35 @@ describe('mocha-xunit-reporter', () => {
     }
   }
 
-  before(function() {
+  before(() => {
     // cache this
     MOCHA_FILE = process.env.MOCHA_FILE
   })
 
-  after(function() {
+  after(() => {
     // reset this
     process.env.MOCHA_FILE = MOCHA_FILE
   })
 
-  beforeEach(function() {
+  beforeEach(() => {
     runner = new Runner()
     filePath = undefined
     delete process.env.MOCHA_FILE
     delete process.env.PROPERTIES
   })
 
-  afterEach(function() {
+  afterEach(() => {
     debug('after')
   })
 
-  it('can produce a XUnit XML report', function() {
+  it('can produce a XUnit XML report', () => {
     createReporter({ mochaFile: 'test/mocha.xml' })
     executeTestRunner()
 
     verifyMochaFile(filePath)
   })
 
-  it('respects `process.env.MOCHA_FILE`', function() {
+  it('respects `process.env.MOCHA_FILE`', () => {
     process.env.MOCHA_FILE = 'test/results.xml'
     createReporter()
     executeTestRunner()
@@ -155,22 +152,22 @@ describe('mocha-xunit-reporter', () => {
     verifyMochaFile(process.env.MOCHA_FILE)
   })
 
-  it('respects `--reporter-options mochaFile=`', function() {
+  it('respects `--reporter-options mochaFile=`', () => {
     createReporter({ mochaFile: 'test/results.xml' })
     executeTestRunner()
 
     verifyMochaFile(filePath)
   })
 
-  it('respects `[hash]` pattern in test results report filename', function() {
-    const dir = "test/";
-    const path = dir + "results.[hash].xml";
+  it('respects `[hash]` pattern in test results report filename', () => {
+    const dir = 'test/'
+    const path = dir + 'results.[hash].xml'
     createReporter({ mochaFile: path })
     executeTestRunner()
     verifyMochaFile(dir + getFileNameWithHash(dir))
   })
 
-  it('will create intermediate directories', function() {
+  it('will create intermediate directories', () => {
     createReporter({ mochaFile: 'test/subdir/foo/mocha.xml' })
     removeTestPath()
     executeTestRunner()
@@ -179,24 +176,24 @@ describe('mocha-xunit-reporter', () => {
     removeTestPath()
   })
 
-  it('creates valid XML report for invalid message', function() {
+  it('creates valid XML report for invalid message', () => {
     createReporter({ mochaFile: 'test/mocha.xml' })
     executeTestRunner({ invalidChar: '\u001b' })
 
     verifyMochaFile(filePath)
   })
 
-  it('outputs skipped tests if "includePending" is specified', function() {
+  it('outputs skipped tests if "includePending" is specified', () => {
     createReporter({ mochaFile: 'test/mocha.xml', includePending: true })
     executeTestRunner({ includePending: true })
 
     verifyMochaFile(filePath)
   })
 
-  it('can output to the console', function() {
+  it('can output to the console', () => {
     createReporter({ mochaFile: 'test/console.xml', toConsole: true })
 
-    var stdout = testConsole.stdout.inspect()
+    const stdout = testConsole.stdout.inspect()
     try {
       executeTestRunner()
       verifyMochaFile(filePath)
@@ -207,69 +204,54 @@ describe('mocha-xunit-reporter', () => {
 
     stdout.restore()
 
-    var xml = stdout.output[0]
+    const xml = stdout.output[0]
     expect(xml).xml.to.be.valid()
     expect(xml).xml.to.equal(mockXml(runner.stats))
   })
 
-  function configureReporter(options) {
-    var reporter = createReporter(options)
+  describe('Output', () => {
+    let reporter, assembly
 
-    reporter.flush = function(suites) {
-      reporter.suites = suites
-    }
-
-    suiteTitles.forEach(function(title) {
-      runner.startSuite({ title: title, suites: [1], tests: [1] })
-    })
-    runner.end()
-
-    return reporter
-  }
-
-  describe('Output', function() {
-    var reporter, assembly
-
-    beforeEach(function() {
+    beforeEach(() => {
       reporter = spyingReporter()
     })
 
-    it('skips suites with empty title', function() {
+    it('skips suites with empty title', () => {
       runner.startSuite({ title: '', tests: [1] })
       runner.end()
 
       expect(assembly).to.be.empty
     })
 
-    it('skips suites without testcases and suites', function() {
+    it('skips suites without testcases and suites', () => {
       runner.startSuite({ title: 'test me' })
       runner.end()
 
       expect(assembly).to.be.empty
     })
 
-    it('does not skip suites with nested suites', function() {
+    it('does not skip suites with nested suites', () => {
       runner.startSuite({ title: 'test me', suites: [1] })
       runner.end()
 
       expect(assembly).to.have.length(1)
     })
 
-    it('does not skip suites with nested tests', function() {
+    it('does not skip suites with nested tests', () => {
       runner.startSuite({ title: 'test me', tests: [1] })
       runner.end()
 
       expect(assembly).to.have.length(1)
     })
 
-    it('does not skip root suite', function() {
+    it('does not skip root suite', () => {
       runner.startSuite({ title: '', root: true, suites: [1] })
       runner.end()
 
       expect(assembly).to.have.length(1)
     })
 
-    it('uses "Root Suite" by default', function() {
+    it('uses "Root Suite" by default', () => {
       runner.startSuite({ title: '', root: true, suites: [1] })
       runner.end()
       expect(assembly[0].collection[0]._attr).to.have.property(
@@ -284,7 +266,7 @@ describe('mocha-xunit-reporter', () => {
 
       reporter = createReporter(options)
 
-      reporter.flush = function(suites) {
+      reporter.flush = (suites) => {
         assembly = suites
       }
 
@@ -292,43 +274,71 @@ describe('mocha-xunit-reporter', () => {
     }
   })
 
-  describe('Feature "Configurable addTags"', function() {
-    var reporter,
-      testsuites,
-      mockedTestCase = {
-        title: 'should behave like so',
-        timestamp: 123,
-        tests: '1',
-        failures: '0',
-        time: '0.004',
-        fullTitle: function() {
-          return 'Super Suite ' + this.title
+  describe('Feature "Configurable addTags"', () => {
+    let reporter
+    const mockedTestCase = {
+      title: '@test=WWW-123 should behave like so',
+      pending: false,
+      type: 'test',
+      body: '',
+      duration: 1682,
+      state: 'passed',
+      parent: {
+        title: 'RBAPI token @requirement=WWW-123',
+        ctx: {},
+        suites: [],
+        tests: [],
+        pending: false,
+        root: false,
+        delayed: false,
+        parent: {
+          title: '',
+          ctx: {},
+          suites: [],
+          tests: [],
+          pending: false,
+          root: true,
+          delayed: false,
+          id: 'r1',
+          type: 'suite',
         },
-      }
+        id: 'r2',
+        type: 'suite',
+      },
+      id: 'r3',
+      wallClockStartedAt: '2019-12-20T14:42:07.186Z',
+      timings: {
+        lifecycle: 40,
+        test: {
+          fnDuration: 1642,
+          afterFnDuration: 0,
+        },
+      },
+      speed: 'slow',
+    }
+
+    mockedTestCase.parent.tests.push(mockedTestCase)
+    mockedTestCase.parent.parent.suites.push(mockedTestCase.parent)
 
     it('should generate attributes for addTags=true and tags in test title', () => {
-      var modTestCase = { ...mockedTestCase }
+      const modTestCase = { ...mockedTestCase }
       modTestCase.title =
         'should behave like so @aid=EPM-DP-C1234 @sid=EPM-1234 @type=Integration'
       reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true })
-      var testCase = reporter.getTestData(modTestCase)
-      expect(testCase.test[0]._attr.name).to.equal(
-        'Super Suite should behave like so'
-      )
+      const testCase = reporter.getTestData(modTestCase)
+      expect(testCase.test[0]._attr.name).to.equal('should behave like so')
       expect(testCase.test[0]._attr.aid).to.equal('EPM-DP-C1234')
       expect(testCase.test[0]._attr.sid).to.equal('EPM-1234')
       expect(testCase.test[0]._attr.type).to.equal('Integration')
     })
 
     it('should generate attributes for addTags=true and tags in test title in quotes', () => {
-      var modTestCase = { ...mockedTestCase }
+      const modTestCase = { ...mockedTestCase }
       modTestCase.title =
         'should behave like so @aid="test TAG 1" @sid=\'TEST tag 2\' @type=Integration'
       reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true })
-      var testCase = reporter.getTestData(modTestCase)
-      expect(testCase.test[0]._attr.name).to.equal(
-        'Super Suite should behave like so'
-      )
+      const testCase = reporter.getTestData(modTestCase)
+      expect(testCase.test[0]._attr.name).to.equal('should behave like so')
       expect(testCase.test[0]._attr.aid).to.equal('test TAG 1')
       expect(testCase.test[0]._attr.sid).to.equal('TEST tag 2')
       expect(testCase.test[0]._attr.type).to.equal('Integration')
@@ -336,16 +346,16 @@ describe('mocha-xunit-reporter', () => {
 
     it('should still work for addTags=true and tags NOT in test title', () => {
       reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true })
-      var testCase = reporter.getTestData(mockedTestCase)
-      expect(testCase.test[0]._attr.name).to.equal(mockedTestCase.fullTitle())
+      const testCase = reporter.getTestData(mockedTestCase)
+      expect(testCase.test[0]._attr.name).to.equal('should behave like so')
     })
 
     it('should generate traits for addTags=true and tags in test title', () => {
-      const modTestCase = { ...mockedTestCase };
+      const modTestCase = { ...mockedTestCase }
       modTestCase.title =
         'should behave like so @aid=EPM-DP-C1234 @sid=EPM-1234 @type=Integration'
       reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true })
-      const testCase = reporter.getTestData(modTestCase);
+      const testCase = reporter.getTestData(modTestCase)
       expect(testCase.test[1].traits[0].trait[0]._attr['name']).to.equal('aid')
       expect(testCase.test[1].traits[0].trait[0]._attr['value']).to.equal(
         'EPM-DP-C1234'
@@ -361,11 +371,11 @@ describe('mocha-xunit-reporter', () => {
     })
 
     it('should generate traits for addTags=true and tags in test title in quotes', () => {
-      const modTestCase = { ...mockedTestCase };
+      const modTestCase = { ...mockedTestCase }
       modTestCase.title =
         'should behave like so @aid="test TAG 1" @sid=\'TEST tag 2\' @type=Integration'
       reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true })
-      const testCase = reporter.getTestData(modTestCase as Mocha.Test);
+      const testCase = reporter.getTestData(modTestCase)
       expect(testCase.test[1].traits[0].trait[0]._attr['name']).to.equal('aid')
       expect(testCase.test[1].traits[0].trait[0]._attr['value']).to.equal(
         'test TAG 1'

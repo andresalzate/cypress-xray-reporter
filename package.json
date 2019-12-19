@@ -1,13 +1,28 @@
 {
   "name": "mocha-xunit-reporter",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "A Mocha xunit reporter",
   "main": "dist/index.js",
   "scripts": {
+    "build": "tsc && yarn format",
+    "format": "npx prettier --config .prettierrc.yml \"**/*.{js,ts,json,md}\" --write",
     "pretest": "rm -rf test/results.*.xml",
-    "test": "node_modules/.bin/mocha test --reporter=spec mocha_file=test/mocha.xml",
-    "tdd": "yarn test --watch",
-    "tsc": "tsc"
+    "test": "node_modules/.bin/mocha test --reporter=spec",
+    "tdd": "yarn test --watch"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npx lint-staged"
+    }
+  },
+  "lint-staged": {
+    "**/*.{js,jsx,ts,tsx}": [
+      "npx eslint"
+    ],
+    "**/*.{css,scss,js,jsx,ts,tsx,md}": [
+      "prettier --config .prettierrc.yml --write",
+      "git add"
+    ]
   },
   "devDependencies": {
     "@types/chai": "^4.2.7",
@@ -25,7 +40,7 @@
     "eslint-plugin-import": "^2.19.1",
     "husky": "^3.1.0",
     "lint-staged": "^9.5.0",
-    "mocha": "^3.0.0",
+    "mocha": "2.4.5",
     "prettier": "^1.19.1",
     "test-console": "^1.0.0",
     "typescript": "^3.7.3"
@@ -48,8 +63,11 @@
     "xunit",
     "report"
   ],
-  "author": "Julian Coy",
+  "author": "Patrick Assuied",
   "license": "MIT",
+  "contributors": [
+    "Julian Coy <julian@superformula.com> (https://github.com/julian-sf)"
+  ],
   "bugs": {
     "url": "https://github.com/MGMResorts/mocha-xunit-reporter/issues"
   },

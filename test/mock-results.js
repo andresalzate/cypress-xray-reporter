@@ -36,7 +36,7 @@ module.exports = function(stats) {
                 test: [
                   {
                     _attr: {
-                      name: 'Foo can weez the juice',
+                      name: 'can weez the juice',
                       time: '0.001',
                       result: 'Pass',
                     },
@@ -47,7 +47,7 @@ module.exports = function(stats) {
                 test: [
                   {
                     _attr: {
-                      name: 'Bar can narfle the garthog',
+                      name: 'can narfle the garthog',
                       time: '0.001',
                       result: 'Fail',
                     },
@@ -58,7 +58,7 @@ module.exports = function(stats) {
                 test: [
                   {
                     _attr: {
-                      name: 'Baz can behave like a flandip',
+                      name: 'can behave like a flandip',
                       time: '0.001',
                       result: 'Fail',
                     },
@@ -83,7 +83,7 @@ module.exports = function(stats) {
                 test: [
                   {
                     _attr: {
-                      name: 'Another suite',
+                      name: 'works',
                       time: '0.004',
                       result: 'Pass',
                     },
@@ -114,7 +114,7 @@ module.exports = function(stats) {
           test: [
             {
               _attr: {
-                name: 'Pending suite',
+                name: 'pending',
                 time: '0',
                 result: 'Skip',
               },

@@ -5,3 +5,5 @@ test/*.xml
 node-debug*
 npm-debug*
 yarn-error.log
+.nvmrc
+*.env

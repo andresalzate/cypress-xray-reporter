@@ -7,6 +7,7 @@ import path from 'path'
 import mkdirp from 'mkdirp'
 import md5 from 'md5'
 
+const debug = require('debug')('mocha-xunit-reporter:tests')
 const xml = require('xml')
 const stripAnsi = require('strip-ansi')
 
@@ -130,6 +131,8 @@ class MochaXUnitReporter extends reporters.Base {
   constructor(runner: Runner, options: MochaOptions) {
     super(runner, options)
 
+    debug('initializing MochaXUnitReporter with options:', options)
+
     this._options = configureDefaults(options)
     this._runner = runner
 
@@ -141,26 +144,36 @@ class MochaXUnitReporter extends reporters.Base {
     })
 
     this._runner.on('suite', (suite: Mocha.Suite) => {
-      if (!isInvalidSuite(suite)) {
+      if (isInvalidSuite(suite)) {
+        debug('suite is invalid:', suite)
+      } else {
+        debug(
+          'running suite:',
+          suite && suite.title ? suite.title : '[Unknown suite title]'
+        )
         this.collections.push(this.getCollectionData(suite))
       }
     })
 
     this._runner.on('pass', (test: Mocha.Test) => {
+      debug('test passed:', test.title)
       this.lastCollection().push(this.getTestData(test, STATUS.PASSED))
     })
 
     this._runner.on('fail', (test: Mocha.Test) => {
+      debug('test failed:', test.title)
       this.lastCollection().push(this.getTestData(test, STATUS.FAILED))
     })
 
     if (this._options.includePending) {
       this._runner.on('pending', (test: Mocha.Test) => {
+        debug('test pending:', test.title)
         this.lastCollection().push(this.getTestData(test, STATUS.SKIPPED))
       })
     }
 
     this._runner.on('end', () => {
+      debug('run complete')
       this.flush(this.collections)
     })
   }
@@ -179,7 +192,7 @@ class MochaXUnitReporter extends reporters.Base {
   }
 
   getTestData(test: Mocha.Test, status?: STATUS) {
-    let name = stripAnsi(test.fullTitle())
+    let name = stripAnsi(test.title)
 
     let tagResult: ReturnType<typeof getTags> | undefined
     if (this._options.addTags) {
