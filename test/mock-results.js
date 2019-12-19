@@ -1,7 +1,7 @@
-var xml = require('xml');
+const xml = require('xml')
 
-module.exports = function(stats, options) {
-  var data = {
+module.exports = function(stats) {
+  const data = {
     assemblies: [
       {
         assembly: [
@@ -17,8 +17,8 @@ module.exports = function(stats, options) {
               'run-time': stats.start
                 .toISOString()
                 .split('T')[1]
-                .split('.')[0]
-            }
+                .split('.')[0],
+            },
           },
           {
             collection: [
@@ -29,8 +29,8 @@ module.exports = function(stats, options) {
                   passed: '1',
                   failed: '2',
                   skipped: '0',
-                  time: '0.003'
-                }
+                  time: '0.003',
+                },
               },
               {
                 test: [
@@ -38,10 +38,10 @@ module.exports = function(stats, options) {
                     _attr: {
                       name: 'Foo can weez the juice',
                       time: '0.001',
-                      result: 'pass'
-                    }
-                  }
-                ]
+                      result: 'Pass',
+                    },
+                  },
+                ],
               },
               {
                 test: [
@@ -49,10 +49,10 @@ module.exports = function(stats, options) {
                     _attr: {
                       name: 'Bar can narfle the garthog',
                       time: '0.001',
-                      result: 'fail'
-                    }
-                  }
-                ]
+                      result: 'Fail',
+                    },
+                  },
+                ],
               },
               {
                 test: [
@@ -60,12 +60,12 @@ module.exports = function(stats, options) {
                     _attr: {
                       name: 'Baz can behave like a flandip',
                       time: '0.001',
-                      result: 'fail'
-                    }
-                  }
-                ]
-              }
-            ]
+                      result: 'Fail',
+                    },
+                  },
+                ],
+              },
+            ],
           },
           {
             collection: [
@@ -76,8 +76,8 @@ module.exports = function(stats, options) {
                   passed: '1',
                   failed: '0',
                   skipped: '0',
-                  time: '0.004'
-                }
+                  time: '0.004',
+                },
               },
               {
                 test: [
@@ -85,17 +85,17 @@ module.exports = function(stats, options) {
                     _attr: {
                       name: 'Another suite',
                       time: '0.004',
-                      result: 'pass'
-                    }
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    ]
-  };
+                      result: 'Pass',
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  }
 
   if (stats.pending) {
     data.assemblies[0].assembly.push({
@@ -107,8 +107,8 @@ module.exports = function(stats, options) {
             passed: '0',
             failed: '0',
             skipped: '1',
-            time: '0'
-          }
+            time: '0',
+          },
         },
         {
           test: [
@@ -116,17 +116,17 @@ module.exports = function(stats, options) {
               _attr: {
                 name: 'Pending suite',
                 time: '0',
-                result: 'skip'
-              }
-            }
-          ]
-        }
-      ]
-    });
+                result: 'Skip',
+              },
+            },
+          ],
+        },
+      ],
+    })
 
-    data.assemblies[0].assembly[0]._attr.skipped = 1;
-    data.assemblies[0].assembly[0]._attr.total = 5;
+    data.assemblies[0].assembly[0]._attr.skipped = 1
+    data.assemblies[0].assembly[0]._attr.total = 5
   }
 
-  return xml(data, { declaration: true });
-};
+  return xml(data, { declaration: true })
+}
