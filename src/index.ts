@@ -34,7 +34,7 @@ function configureDefaults(options?: MochaOptions) {
 
 function isInvalidSuite(suite: Mocha.Suite) {
   return (
-    (!suite.root && suite.title === '') ||
+    (!suite.root && !suite.title) ||
     (suite.tests.length === 0 && suite.suites.length === 0)
   )
 }
@@ -112,7 +112,8 @@ interface CollectionXML {
         skipped: number
       }>
     },
-    TestXML?
+    (TestXML | CollectionXML)?,
+    TraitsXML?
   ]
 }
 
@@ -149,7 +150,7 @@ class MochaXUnitReporter extends reporters.Base {
       } else {
         debug(
           'running suite:',
-          suite && suite.title ? suite.title : '[Unknown suite title]'
+          suite?.title || (suite.root ? '[Root suite]' : '[Unknown suite]')
         )
         this.collections.push(this.getCollectionData(suite))
       }
@@ -206,7 +207,7 @@ class MochaXUnitReporter extends reporters.Base {
       test: [
         {
           _attr: {
-            name: name,
+            name,
             time:
               typeof test.duration === 'undefined' ? 0 : test.duration / 1000,
             result: status,
@@ -270,6 +271,10 @@ class MochaXUnitReporter extends reporters.Base {
   }
 
   getXml(collections: CollectionXML[]): string {
+    const isTest = (test: any): test is TestXML => {
+      return (test as TestXML).test !== undefined
+    }
+
     const stats = this._runner.stats
 
     let totalSuitesTime = 0
@@ -288,16 +293,18 @@ class MochaXUnitReporter extends reporters.Base {
       _collAttr.skipped = 0
 
       _cases.forEach((test) => {
-        if (test!.test[0]._attr.result === STATUS.SKIPPED) {
-          _collAttr.skipped!++
+        if (isTest(test)) {
+          if (test!.test[0]._attr.result === STATUS.SKIPPED) {
+            _collAttr.skipped!++
+          }
+          if (test!.test[0]._attr.result === STATUS.FAILED) {
+            _collAttr.failed!++
+          }
+          if (test!.test[0]._attr.result === STATUS.PASSED) {
+            _collAttr.passed!++
+          }
+          _collAttr.time! += test!.test[0]._attr.time!
         }
-        if (test!.test[0]._attr.result === STATUS.FAILED) {
-          _collAttr.failed!++
-        }
-        if (test!.test[0]._attr.result === STATUS.PASSED) {
-          _collAttr.passed!++
-        }
-        _collAttr.time! += test!.test[0]._attr.time!
       })
 
       _collAttr.total = _collAttr.skipped + _collAttr.failed + _collAttr.passed
