@@ -1,7 +1,7 @@
 {
-  "name": "mocha-xunit-reporter",
+  "name": "xunit-mocha-reporter",
   "version": "2.0.1",
-  "description": "A Mocha xunit reporter",
+  "description": "An XUnit Reporter for Mocha",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc && yarn format",
@@ -56,7 +56,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MGMResorts/mocha-xunit-reporter.git"
+    "url": "git+https://github.com/MGMResorts/xunit-mocha-reporter.git"
   },
   "keywords": [
     "mocha",
@@ -70,7 +70,7 @@
     "Patrick Assuied (https://github.com/passuied)"
   ],
   "bugs": {
-    "url": "https://github.com/MGMResorts/mocha-xunit-reporter/issues"
+    "url": "https://github.com/MGMResorts/xunit-mocha-reporter/issues"
   },
-  "homepage": "https://github.com/MGMResorts/mocha-xunit-reporter#readme"
+  "homepage": "https://github.com/MGMResorts/xunit-mocha-reporter#readme"
 }

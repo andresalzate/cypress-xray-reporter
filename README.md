@@ -1,26 +1,26 @@
-# mocha-xunit-reporter
+# xunit-mocha-reporter
 
 A Mocha xunit reporter. Produces XUnit-style XML test results.
-Adapted from and Inspired by [mocha-junit-reporter](https://github.com/michaelleeallen/mocha-junit-reporter)
+Adapted from and Inspired by [mocha-xunit-reporter](https://github.com/passuied/mocha-xunit-reporter)
 
 ## Installation
 
 ```bash
-$ npm install mocha-xunit-reporter --save-dev
+$ npm install xunit-mocha-reporter --save-dev
 ```
 
 or as a global module
 
 ```bash
-$ npm install -g mocha-xunit-reporter
+$ npm install -g xunit-mocha-reporter
 ```
 
 ## Usage
 
-Run mocha with `mocha-xunit-reporter`:
+Run mocha with `xunit-mocha-reporter`:
 
 ```bash
-$ mocha test --reporter mocha-xunit-reporter
+$ mocha test --reporter xunit-mocha-reporter
 ```
 
 This will output a results file at `./test-results.xml`.
@@ -28,20 +28,20 @@ This will output a results file at `./test-results.xml`.
 You may optionally declare an alternate location for rexults XML file by setting the environment variable `MOCHA_FILE` or specifying `mochaFile` in `reporterOptions`:
 
 ```bash
-$ MOCHA_FILE=./path_to_your/file.xml mocha test --reporter mocha-xunit-reporter
+$ MOCHA_FILE=./path_to_your/file.xml mocha test --reporter xunit-mocha-reporter
 ```
 
 or
 
 ```bash
-$ mocha test --reporter mocha-xunit-reporter --reporter-options mochaFile=./path_to_your/file.xml
+$ mocha test --reporter xunit-mocha-reporter --reporter-options mochaFile=./path_to_your/file.xml
 ```
 
 or
 
 ```javascript
 var mocha = new Mocha({
-  reporter: 'mocha-xunit-reporter',
+  reporter: 'xunit-mocha-reporter',
   reporterOptions: {
     mochaFile: './path_to_your/file.xml',
   },
@@ -55,7 +55,7 @@ var mocha = new Mocha({
 
 ```javascript
 var mocha = new Mocha({
-  reporter: 'mocha-xunit-reporter',
+  reporter: 'xunit-mocha-reporter',
   reporterOptions: {
     mochaFile: './path_to_your/file.xml',
     addTags: true,

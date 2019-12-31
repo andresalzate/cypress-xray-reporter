@@ -7,7 +7,7 @@ import path from 'path'
 import mkdirp from 'mkdirp'
 import md5 from 'md5'
 
-const debug = require('debug')('mocha-xunit-reporter:tests')
+const debug = require('debug')('xunit-mocha-reporter:tests')
 const xml = require('xml')
 const stripAnsi = require('strip-ansi')
 
@@ -119,11 +119,11 @@ interface CollectionXML {
 
 /**
  * XUnit reporter for mocha.js.
- * @module mocha-xunit-reporter
+ * @module xunit-mocha-reporter
  * @param {EventEmitter} runner - the test runner
  * @param {Object} options - mocha options
  */
-class MochaXUnitReporter extends reporters.Base {
+class XUnitMochaReporter extends reporters.Base {
   _options: any
   _runner: any
 
@@ -132,7 +132,7 @@ class MochaXUnitReporter extends reporters.Base {
   constructor(runner: Runner, options: MochaOptions) {
     super(runner, options)
 
-    debug('initializing MochaXUnitReporter with options:', options)
+    debug('initializing XUnitMochaReporter with options:', options)
 
     this._options = configureDefaults(options)
     this._runner = runner
@@ -363,4 +363,4 @@ class MochaXUnitReporter extends reporters.Base {
   }
 }
 
-module.exports = MochaXUnitReporter
+module.exports = XUnitMochaReporter

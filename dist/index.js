@@ -10,7 +10,7 @@ const fs_1 = __importDefault(require('fs'))
 const path_1 = __importDefault(require('path'))
 const mkdirp_1 = __importDefault(require('mkdirp'))
 const md5_1 = __importDefault(require('md5'))
-const debug = require('debug')('mocha-xunit-reporter:tests')
+const debug = require('debug')('xunit-mocha-reporter:tests')
 const xml = require('xml')
 const stripAnsi = require('strip-ansi')
 var STATUS
@@ -69,7 +69,7 @@ function getTags(testTitle) {
   result.cleanTitle = result.cleanTitle.trim()
   return result
 }
-class MochaXUnitReporter extends mocha_1.reporters.Base {
+class XUnitMochaReporter extends mocha_1.reporters.Base {
   constructor(runner, options) {
     super(runner, options)
     this.collections = []
@@ -80,7 +80,7 @@ class MochaXUnitReporter extends mocha_1.reporters.Base {
         input
       )
     }
-    debug('initializing MochaXUnitReporter with options:', options)
+    debug('initializing XUnitMochaReporter with options:', options)
     this._options = configureDefaults(options)
     this._runner = runner
     this._runner.on('start', () => {
@@ -267,4 +267,4 @@ class MochaXUnitReporter extends mocha_1.reporters.Base {
     }
   }
 }
-module.exports = MochaXUnitReporter
+module.exports = XUnitMochaReporter

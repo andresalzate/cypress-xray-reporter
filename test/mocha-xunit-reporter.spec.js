@@ -14,11 +14,11 @@ const chaiXML = require('chai-xml')
 const mockXml = require('./mock-results')
 const testConsole = require('test-console')
 
-const debug = require('debug')('mocha-xunit-reporter:tests')
+const debug = require('debug')('xunit-mocha-reporter:tests')
 
 chai.use(chaiXML)
 
-describe('mocha-xunit-reporter', () => {
+describe('xunit-mocha-reporter', () => {
   let runner
   let filePath
   let MOCHA_FILE
