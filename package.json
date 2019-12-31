@@ -63,10 +63,11 @@
     "xunit",
     "report"
   ],
-  "author": "Patrick Assuied",
+  "author": "Patrick Assuied & Julian Coy",
   "license": "MIT",
   "contributors": [
-    "Julian Coy <julian@superformula.com> (https://github.com/julian-sf)"
+    "Julian Coy <julian@superformula.com> (https://github.com/julian-sf)",
+    "Patrick Assuied (https://github.com/passuied)"
   ],
   "bugs": {
     "url": "https://github.com/MGMResorts/mocha-xunit-reporter/issues"
