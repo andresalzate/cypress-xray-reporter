@@ -30,11 +30,12 @@ describe('xunit-mocha-reporter', () => {
     options.root = typeof options.root !== 'undefined' ? options.root : false
     runner.start()
 
-    runner.startSuite({
+    const mainSuite = {
       title: options.title,
       root: options.root,
       tests: [1, 2],
-    })
+    }
+    runner.startSuite(mainSuite)
 
     if (!options.skipPassedTests) {
       runner.pass(new Test('Foo can weez the juice', 'can weez the juice', 1))
@@ -55,20 +56,25 @@ describe('xunit-mocha-reporter', () => {
           'expected baz to be masher, a hustler, an uninvited grasper of cone',
       }
     )
-
-    runner.startSuite({
+    const anotherSuite = {
       title: 'Another suite!',
       tests: [1],
-    })
+    }
+    runner.startSuite(anotherSuite)
     runner.pass(new Test('Another suite', 'works', 4))
+    runner.endSuite(anotherSuite)
 
     if (options && options.includePending) {
-      runner.startSuite({
+      const pendingSuite = {
         title: 'Pending suite!',
         tests: [1],
-      })
+      }
+      runner.startSuite(pendingSuite)
       runner.pending(new Test('Pending suite', 'pending'))
+      runner.endSuite(pendingSuite)
     }
+
+    runner.endSuite(mainSuite)
 
     runner.end()
   }
@@ -320,6 +326,12 @@ describe('xunit-mocha-reporter', () => {
     mockedTestCase.parent.tests.push(mockedTestCase)
     mockedTestCase.parent.parent.suites.push(mockedTestCase.parent)
 
+    const validateTestCase = (testCase) => {
+      expect(testCase.test[1].traits[0].trait[0]._attr.name).to.equal('aid')
+      expect(testCase.test[1].traits[1].trait[0]._attr.name).to.equal('sid')
+      expect(testCase.test[1].traits[2].trait[0]._attr.name).to.equal('type')
+    }
+
     it('should generate attributes for addTags=true and tags in test title', () => {
       const modTestCase = { ...mockedTestCase }
       modTestCase.title =
@@ -327,9 +339,16 @@ describe('xunit-mocha-reporter', () => {
       reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true })
       const testCase = reporter.getTestData(modTestCase)
       expect(testCase.test[0]._attr.name).to.equal('should behave like so')
-      expect(testCase.test[0]._attr.aid).to.equal('EPM-DP-C1234')
-      expect(testCase.test[0]._attr.sid).to.equal('EPM-1234')
-      expect(testCase.test[0]._attr.type).to.equal('Integration')
+      expect(testCase.test[1].traits[0].trait[0]._attr.value).to.equal(
+        'EPM-DP-C1234'
+      )
+      expect(testCase.test[1].traits[1].trait[0]._attr.value).to.equal(
+        'EPM-1234'
+      )
+      expect(testCase.test[1].traits[2].trait[0]._attr.value).to.equal(
+        'Integration'
+      )
+      validateTestCase(testCase)
     })
 
     it('should generate attributes for addTags=true and tags in test title in quotes', () => {
@@ -339,9 +358,16 @@ describe('xunit-mocha-reporter', () => {
       reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true })
       const testCase = reporter.getTestData(modTestCase)
       expect(testCase.test[0]._attr.name).to.equal('should behave like so')
-      expect(testCase.test[0]._attr.aid).to.equal('test TAG 1')
-      expect(testCase.test[0]._attr.sid).to.equal('TEST tag 2')
-      expect(testCase.test[0]._attr.type).to.equal('Integration')
+      expect(testCase.test[1].traits[0].trait[0]._attr.value).to.equal(
+        'test TAG 1'
+      )
+      expect(testCase.test[1].traits[1].trait[0]._attr.value).to.equal(
+        'TEST tag 2'
+      )
+      expect(testCase.test[1].traits[2].trait[0]._attr.value).to.equal(
+        'Integration'
+      )
+      validateTestCase(testCase)
     })
 
     it('should still work for addTags=true and tags NOT in test title', () => {

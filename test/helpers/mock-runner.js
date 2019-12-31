@@ -30,6 +30,10 @@ Runner.prototype.startSuite = function(suite) {
   this.emit('suite', suite)
 }
 
+Runner.prototype.endSuite = function(suite) {
+  this.emit('suite end', suite)
+}
+
 Runner.prototype.pass = function(test) {
   this.emit('pass', test)
   this.endTest()

@@ -103,14 +103,14 @@ interface TestXML {
 interface CollectionXML {
   collection: [
     {
-      _attr: Partial<{
+      _attr: {
         name: string
         time: number
         total: number
         passed: number
         failed: number
         skipped: number
-      }>
+      }
     },
     (TestXML | CollectionXML)?,
     TraitsXML?
@@ -128,6 +128,7 @@ class XUnitMochaReporter extends reporters.Base {
   _runner: any
 
   collections: CollectionXML[] = []
+  collectionQueue: CollectionXML[] = []
 
   constructor(runner: Runner, options: MochaOptions) {
     super(runner, options)
@@ -152,8 +153,18 @@ class XUnitMochaReporter extends reporters.Base {
           'running suite:',
           suite?.title || (suite.root ? '[Root suite]' : '[Unknown suite]')
         )
-        this.collections.push(this.getCollectionData(suite))
+        const collection = this.getCollectionData(suite)
+        this.collections.push(collection)
+        this.collectionQueue.push(collection)
       }
+    })
+
+    this._runner.on('suite end', (suite: Mocha.Suite) => {
+      debug(
+        'completed suite:',
+        suite?.title || (suite.root ? '[Root suite]' : '[Unknown suite]')
+      )
+      this.collectionQueue.pop()
     })
 
     this._runner.on('pass', (test: Mocha.Test) => {
@@ -186,6 +197,10 @@ class XUnitMochaReporter extends reporters.Base {
           _attr: {
             name: suite.title || 'Root Suite',
             total: suite.tests.length,
+            failed: 0,
+            skipped: 0,
+            passed: 0,
+            time: 0,
           },
         },
       ],
@@ -222,14 +237,12 @@ class XUnitMochaReporter extends reporters.Base {
         traits: [],
       } as unknown) as TraitsXML)
       ;(Object.keys(tagResult.tags) as Array<keyof TestAttrs>).forEach(
-        (tagName: keyof TestAttrs) => {
+        (tagName) => {
           let tagValue = ''
           if (tagResult!.tags[tagName]) {
             tagValue = tagResult!.tags[tagName]
           }
-          const [{ _attr }, traits] = testCase.test
-          // @ts-ignore
-          _attr[tagName] = tagValue
+          const [, traits] = testCase.test
           traits!.traits.push({
             trait: [
               {
@@ -248,7 +261,7 @@ class XUnitMochaReporter extends reporters.Base {
   }
 
   lastCollection() {
-    return this.collections[this.collections.length - 1].collection
+    return this.collectionQueue.slice(-1)[0].collection
   }
 
   // noinspection JSUnusedGlobalSymbols
@@ -275,57 +288,76 @@ class XUnitMochaReporter extends reporters.Base {
       return (test as TestXML).test !== undefined
     }
 
+    const isCollection = (collection: any): collection is CollectionXML => {
+      return (collection as CollectionXML).collection !== undefined
+    }
+
+    const addTime = (a: { time: number }, b: { time: number }) => {
+      a.time *= 1000 // convert time to milliseconds
+      a.time += b.time * 1000 // then add (by mutating the time object)
+      a.time /= 1000 // then convert back to seconds
+    }
+
     const stats = this._runner.stats
 
-    let totalSuitesTime = 0
-    let totalTests = 0
-    let totalPassed = 0
-    let totalFailed = 0
-    let totalSkipped = 0
+    const summarizeCollection = (
+      collection: CollectionXML,
+      parent?: CollectionXML
+    ) => {
+      const [{ _attr: collectionAttrs }, ...items] = collection.collection
 
-    collections.forEach((collection) => {
-      const [{ _attr: _collAttr }, ..._cases] = collection.collection
+      collectionAttrs.failed = 0
+      collectionAttrs.passed = 0
+      collectionAttrs.total = 0
+      collectionAttrs.time = 0
+      collectionAttrs.skipped = 0
 
-      _collAttr.failed = 0
-      _collAttr.passed = 0
-      _collAttr.total = 0
-      _collAttr.time = 0
-      _collAttr.skipped = 0
+      items.forEach((item) => {
+        if (isTest(item)) {
+          if (item!.test[0]._attr.result === STATUS.SKIPPED) {
+            collectionAttrs.skipped++
+            collectionAttrs.total++
+          }
+          if (item!.test[0]._attr.result === STATUS.FAILED) {
+            collectionAttrs.failed++
+            collectionAttrs.total++
+          }
+          if (item!.test[0]._attr.result === STATUS.PASSED) {
+            collectionAttrs.passed++
+            collectionAttrs.total++
+          }
 
-      _cases.forEach((test) => {
-        if (isTest(test)) {
-          if (test!.test[0]._attr.result === STATUS.SKIPPED) {
-            _collAttr.skipped!++
-          }
-          if (test!.test[0]._attr.result === STATUS.FAILED) {
-            _collAttr.failed!++
-          }
-          if (test!.test[0]._attr.result === STATUS.PASSED) {
-            _collAttr.passed!++
-          }
-          _collAttr.time! += test!.test[0]._attr.time!
+          addTime(collectionAttrs, item!.test[0]._attr)
+        } else if (isCollection(item)) {
+          summarizeCollection(item, collection)
         }
       })
 
-      _collAttr.total = _collAttr.skipped + _collAttr.failed + _collAttr.passed
+      if (parent) {
+        const [{ _attr: parentAttrs }] = parent.collection
+        parentAttrs.total += collectionAttrs.total
+        parentAttrs.passed += collectionAttrs.passed
+        parentAttrs.skipped += collectionAttrs.skipped
+        parentAttrs.failed += collectionAttrs.failed
 
-      totalSuitesTime += _collAttr.time
-      totalTests += _collAttr.total
-      totalPassed += _collAttr.passed
-      totalSkipped += _collAttr.skipped
-      totalFailed += _collAttr.failed
-    })
+        addTime(parentAttrs, collectionAttrs)
+      }
+    }
+
+    collections.forEach((collection) => summarizeCollection(collection))
+
+    const [{ _attr: rootAttrs }] = collections[0].collection
 
     const assembly = {
       assembly: [
         {
           _attr: {
             name: this._options.assemblyName,
-            time: totalSuitesTime,
-            total: totalTests,
-            failed: totalFailed,
-            passed: totalPassed,
-            skipped: totalSkipped,
+            total: rootAttrs.total,
+            failed: rootAttrs.failed,
+            skipped: rootAttrs.skipped,
+            passed: rootAttrs.passed,
+            time: rootAttrs.time,
             'run-date': stats.start.toISOString().split('T')[0],
             'run-time': stats.start
               .toISOString()

@@ -8,11 +8,11 @@ module.exports = function(stats) {
           {
             _attr: {
               name: 'Mocha Tests',
-              total: '4',
-              passed: '2',
+              total: '3',
+              passed: '1',
               failed: '2',
               skipped: '0',
-              time: '0.007',
+              time: '0.003',
               'run-date': stats.start.toISOString().split('T')[0],
               'run-time': stats.start
                 .toISOString()
@@ -71,12 +71,12 @@ module.exports = function(stats) {
             collection: [
               {
                 _attr: {
-                  name: 'Another suite!',
-                  total: '1',
-                  passed: '1',
+                  name: '@test=A Another suite!',
+                  total: '2',
+                  passed: '2',
                   failed: '0',
                   skipped: '0',
-                  time: '0.004',
+                  time: '0.008',
                 },
               },
               {
@@ -88,44 +88,81 @@ module.exports = function(stats) {
                       result: 'Pass',
                     },
                   },
+                  {
+                    traits: [
+                      {
+                        trait: [
+                          {
+                            _attr: {
+                              name: 'test',
+                              value: 'A',
+                            },
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                test: [
+                  {
+                    _attr: {
+                      name: 'works',
+                      time: '0.004',
+                      result: 'Pass',
+                    },
+                  },
+                  {
+                    traits: [
+                      {
+                        trait: [
+                          {
+                            _attr: {
+                              name: 'test',
+                              value: 'A',
+                            },
+                          },
+                        ],
+                      },
+                    ],
+                  },
                 ],
               },
             ],
           },
+          {
+            ...(stats.pending
+              ? {
+                  collection: [
+                    {
+                      _attr: {
+                        name: 'Pending suite!',
+                        total: '1',
+                        passed: '0',
+                        failed: '0',
+                        skipped: '1',
+                        time: '0',
+                      },
+                    },
+                    {
+                      test: [
+                        {
+                          _attr: {
+                            name: 'pending',
+                            time: '0',
+                            result: 'Skip',
+                          },
+                        },
+                      ],
+                    },
+                  ],
+                }
+              : {}),
+          },
         ],
       },
     ],
-  }
-
-  if (stats.pending) {
-    data.assemblies[0].assembly.push({
-      collection: [
-        {
-          _attr: {
-            name: 'Pending suite!',
-            total: '1',
-            passed: '0',
-            failed: '0',
-            skipped: '1',
-            time: '0',
-          },
-        },
-        {
-          test: [
-            {
-              _attr: {
-                name: 'pending',
-                time: '0',
-                result: 'Skip',
-              },
-            },
-          ],
-        },
-      ],
-    })
-
-    data.assemblies[0].assembly[0]._attr.skipped = 1
-    data.assemblies[0].assembly[0]._attr.total = 5
   }
 
   return xml(data, { declaration: true })
