@@ -57,11 +57,12 @@ describe('xunit-mocha-reporter', () => {
       }
     )
     const anotherSuite = {
-      title: 'Another suite!',
+      title: '@test=A Another suite!',
       tests: [1],
     }
     runner.startSuite(anotherSuite)
     runner.pass(new Test('Another suite', 'works', 4))
+    runner.pass(new Test('Another suite still', 'works', 4))
     runner.endSuite(anotherSuite)
 
     if (options && options.includePending) {

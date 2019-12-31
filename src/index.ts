@@ -39,6 +39,8 @@ function isInvalidSuite(suite: Mocha.Suite) {
   )
 }
 
+type Tags = { [K in keyof TestAttrs]: string }
+
 /**
  * Parses title for tags in format @tagName=value
  * @param {} testTitle
@@ -48,7 +50,7 @@ function getTags(testTitle: string) {
   const regexTag = /@([A-Za-z]+)=(?:"([\w\d\s-]+)"|'([\w\d\s-]+)'|([\w\d-]+))/i
 
   const result = {
-    tags: {} as { [K in keyof TestAttrs]: string },
+    tags: {} as Tags,
     cleanTitle: testTitle,
     tagsFound: false,
   }
@@ -231,30 +233,41 @@ class XUnitMochaReporter extends reporters.Base {
       ],
     } as TestXML
 
+    let allTags = {} as Tags
+
+    this.collectionQueue.forEach((collection) => {
+      const tagResult = getTags(collection.collection[0]._attr.name)
+      if (tagResult && tagResult.tags) {
+        allTags = { ...allTags, ...tagResult.tags }
+      }
+    })
+
     if (tagResult && tagResult.tags) {
+      allTags = { ...allTags, ...tagResult.tags }
+    }
+
+    if (Object.keys(allTags).length > 0) {
       testCase.test.push(({
         // assign the initial traits information
         traits: [],
       } as unknown) as TraitsXML)
-      ;(Object.keys(tagResult.tags) as Array<keyof TestAttrs>).forEach(
-        (tagName) => {
-          let tagValue = ''
-          if (tagResult!.tags[tagName]) {
-            tagValue = tagResult!.tags[tagName]
-          }
-          const [, traits] = testCase.test
-          traits!.traits.push({
-            trait: [
-              {
-                _attr: {
-                  name: tagName,
-                  value: tagValue,
-                },
-              },
-            ],
-          })
+      ;(Object.keys(allTags) as Array<keyof TestAttrs>).forEach((tagName) => {
+        let tagValue = ''
+        if (allTags[tagName]) {
+          tagValue = allTags[tagName]
         }
-      )
+        const [, traits] = testCase.test
+        traits!.traits.push({
+          trait: [
+            {
+              _attr: {
+                name: tagName,
+                value: tagValue,
+              },
+            },
+          ],
+        })
+      })
     }
 
     return testCase
