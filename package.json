@@ -1,6 +1,6 @@
 {
   "name": "xunit-mocha-reporter",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "An XUnit Reporter for Mocha",
   "main": "dist/index.js",
   "scripts": {
@@ -43,13 +43,15 @@
     "mocha": "2.4.5",
     "prettier": "^1.19.1",
     "test-console": "^1.0.0",
-    "typescript": "^3.7.3"
+    "typescript": "^3.7.3",
+    "xml": "^1.0.0"
   },
   "dependencies": {
     "md5": "^2.1.0",
     "mkdirp": "~0.5.1",
     "strip-ansi": "^5.2.0",
-    "xml": "^1.0.0"
+    "fast-xml-parser": "^3.15.1",
+    "he": "^1.2.0"
   },
   "peerDependencies": {
     "mocha": ">=2.2.5"

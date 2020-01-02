@@ -197,6 +197,18 @@ describe('xunit-mocha-reporter', () => {
     verifyMochaFile(filePath)
   })
 
+  it('filters out collections without "@test" attributes when "xrayReport" is specified', () => {
+    const mochaFile = 'test/mocha.xml'
+    createReporter({
+      mochaFile,
+      xrayReport: true,
+    })
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
+    executeTestRunner()
+
+    verifyMochaFile(filePath, { xrayReport: true })
+  })
+
   it('can output to the console', () => {
     createReporter({ mochaFile: 'test/console.xml', toConsole: true })
 
@@ -261,10 +273,7 @@ describe('xunit-mocha-reporter', () => {
     it('uses "Root Suite" by default', () => {
       runner.startSuite({ title: '', root: true, suites: [1] })
       runner.end()
-      expect(assembly[0].collection[0]._attr).to.have.property(
-        'name',
-        'Root Suite'
-      )
+      expect(assembly[0]).to.have.property('@_name', 'Root Suite')
     })
 
     function spyingReporter(options) {
@@ -328,9 +337,9 @@ describe('xunit-mocha-reporter', () => {
     mockedTestCase.parent.parent.suites.push(mockedTestCase.parent)
 
     const validateTestCase = (testCase) => {
-      expect(testCase.test[1].traits[0].trait[0]._attr.name).to.equal('aid')
-      expect(testCase.test[1].traits[1].trait[0]._attr.name).to.equal('sid')
-      expect(testCase.test[1].traits[2].trait[0]._attr.name).to.equal('type')
+      expect(testCase.traits.trait[0]['@_name']).to.equal('aid')
+      expect(testCase.traits.trait[1]['@_name']).to.equal('sid')
+      expect(testCase.traits.trait[2]['@_name']).to.equal('type')
     }
 
     it('should generate attributes for addTags=true and tags in test title', () => {
@@ -339,16 +348,10 @@ describe('xunit-mocha-reporter', () => {
         'should behave like so @aid=EPM-DP-C1234 @sid=EPM-1234 @type=Integration'
       reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true })
       const testCase = reporter.getTestData(modTestCase)
-      expect(testCase.test[0]._attr.name).to.equal('should behave like so')
-      expect(testCase.test[1].traits[0].trait[0]._attr.value).to.equal(
-        'EPM-DP-C1234'
-      )
-      expect(testCase.test[1].traits[1].trait[0]._attr.value).to.equal(
-        'EPM-1234'
-      )
-      expect(testCase.test[1].traits[2].trait[0]._attr.value).to.equal(
-        'Integration'
-      )
+      expect(testCase['@_name']).to.equal('should behave like so')
+      expect(testCase.traits.trait[0]['@_value']).to.equal('EPM-DP-C1234')
+      expect(testCase.traits.trait[1]['@_value']).to.equal('EPM-1234')
+      expect(testCase.traits.trait[2]['@_value']).to.equal('Integration')
       validateTestCase(testCase)
     })
 
@@ -358,23 +361,17 @@ describe('xunit-mocha-reporter', () => {
         'should behave like so @aid="test TAG 1" @sid=\'TEST tag 2\' @type=Integration'
       reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true })
       const testCase = reporter.getTestData(modTestCase)
-      expect(testCase.test[0]._attr.name).to.equal('should behave like so')
-      expect(testCase.test[1].traits[0].trait[0]._attr.value).to.equal(
-        'test TAG 1'
-      )
-      expect(testCase.test[1].traits[1].trait[0]._attr.value).to.equal(
-        'TEST tag 2'
-      )
-      expect(testCase.test[1].traits[2].trait[0]._attr.value).to.equal(
-        'Integration'
-      )
+      expect(testCase['@_name']).to.equal('should behave like so')
+      expect(testCase.traits.trait[0]['@_value']).to.equal('test TAG 1')
+      expect(testCase.traits.trait[1]['@_value']).to.equal('TEST tag 2')
+      expect(testCase.traits.trait[2]['@_value']).to.equal('Integration')
       validateTestCase(testCase)
     })
 
     it('should still work for addTags=true and tags NOT in test title', () => {
       reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true })
       const testCase = reporter.getTestData(mockedTestCase)
-      expect(testCase.test[0]._attr.name).to.equal('should behave like so')
+      expect(testCase['@_name']).to.equal('should behave like so')
     })
 
     it('should generate traits for addTags=true and tags in test title', () => {
@@ -383,18 +380,10 @@ describe('xunit-mocha-reporter', () => {
         'should behave like so @aid=EPM-DP-C1234 @sid=EPM-1234 @type=Integration'
       reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true })
       const testCase = reporter.getTestData(modTestCase)
-      expect(testCase.test[1].traits[0].trait[0]._attr['name']).to.equal('aid')
-      expect(testCase.test[1].traits[0].trait[0]._attr['value']).to.equal(
-        'EPM-DP-C1234'
-      )
-      expect(testCase.test[1].traits[1].trait[0]._attr['name']).to.equal('sid')
-      expect(testCase.test[1].traits[1].trait[0]._attr['value']).to.equal(
-        'EPM-1234'
-      )
-      expect(testCase.test[1].traits[2].trait[0]._attr['name']).to.equal('type')
-      expect(testCase.test[1].traits[2].trait[0]._attr['value']).to.equal(
-        'Integration'
-      )
+      expect(testCase.traits.trait[0]['@_value']).to.equal('EPM-DP-C1234')
+      expect(testCase.traits.trait[1]['@_value']).to.equal('EPM-1234')
+      expect(testCase.traits.trait[2]['@_value']).to.equal('Integration')
+      validateTestCase(testCase)
     })
 
     it('should generate traits for addTags=true and tags in test title in quotes', () => {
@@ -403,18 +392,11 @@ describe('xunit-mocha-reporter', () => {
         'should behave like so @aid="test TAG 1" @sid=\'TEST tag 2\' @type=Integration'
       reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true })
       const testCase = reporter.getTestData(modTestCase)
-      expect(testCase.test[1].traits[0].trait[0]._attr['name']).to.equal('aid')
-      expect(testCase.test[1].traits[0].trait[0]._attr['value']).to.equal(
-        'test TAG 1'
-      )
-      expect(testCase.test[1].traits[1].trait[0]._attr['name']).to.equal('sid')
-      expect(testCase.test[1].traits[1].trait[0]._attr['value']).to.equal(
-        'TEST tag 2'
-      )
-      expect(testCase.test[1].traits[2].trait[0]._attr['name']).to.equal('type')
-      expect(testCase.test[1].traits[2].trait[0]._attr['value']).to.equal(
-        'Integration'
-      )
+      expect(testCase['@_name']).to.equal('should behave like so')
+      expect(testCase.traits.trait[0]['@_value']).to.equal('test TAG 1')
+      expect(testCase.traits.trait[1]['@_value']).to.equal('TEST tag 2')
+      expect(testCase.traits.trait[2]['@_value']).to.equal('Integration')
+      validateTestCase(testCase)
     })
   })
 })

@@ -7,8 +7,11 @@ import path from 'path'
 import mkdirp from 'mkdirp'
 import md5 from 'md5'
 
-const debug = require('debug')('xunit-mocha-reporter:tests')
-const xml = require('xml')
+const debug = require('debug')('xunit-mocha-reporter'),
+  combine = require('debug')('xunit-mocha-reporter:combine'),
+  xray = require('debug')('xunit-mocha-reporter:xray')
+const parser = require('fast-xml-parser')
+const he = require('he')
 const stripAnsi = require('strip-ansi')
 
 enum STATUS {
@@ -17,8 +20,22 @@ enum STATUS {
   SKIPPED = 'Skip',
 }
 
+class NoCollectionError extends Error {
+  message = 'No collections remain after filtering'
+}
+
 // A subset of invalid characters as defined in http://www.w3.org/TR/xml/#charsets that can occur in e.g. stacktraces
 const INVALID_CHARACTERS = ['\u001b']
+
+const DEFAULT_PARSER_OPTIONS = {
+  ignoreAttributes: false,
+  tagValueProcessor: (a: string) => he.encode(a, { useNamedReferences: true }),
+  attrValueProcessor: (a: string) =>
+    he.encode(a, {
+      isAttributeValue: true,
+      useNamedReferences: true,
+    }),
+}
 
 function configureDefaults(options?: MochaOptions) {
   const { reporterOptions } = options ?? {}
@@ -77,46 +94,62 @@ function getTags(testTitle: string) {
   return result
 }
 
+interface RunInfoAttrs {
+  '@_name': string
+  '@_total': number
+  '@_failed': number
+  '@_skipped': number
+  '@_passed': number
+  '@_time': number
+}
+
 interface TestAttrs {
-  name: string
-  type: string
-  method: string
-  time: number
-  result: STATUS.PASSED | STATUS.FAILED | STATUS.SKIPPED
+  '@_name': string
+  '@_time': number
+  '@_result': STATUS.PASSED | STATUS.FAILED | STATUS.SKIPPED
+
+  '@_method'?: string
+  '@_type'?: string
 }
 
-interface TraitsXML {
-  traits: [
-    {
-      trait: [{ _attr: { name: keyof TestAttrs; value: string } }]
-    }
-  ]
+interface TraitXML {
+  '@_name': string
+  '@_value': string
 }
 
-interface TestXML {
-  test: [
-    {
-      _attr: TestAttrs
-    },
-    TraitsXML?
-  ]
+interface TestXML extends TestAttrs {
+  traits?: { trait: TraitXML[] }
 }
 
-interface CollectionXML {
-  collection: [
-    {
-      _attr: {
-        name: string
-        time: number
-        total: number
-        passed: number
-        failed: number
-        skipped: number
-      }
-    },
-    (TestXML | CollectionXML)?,
-    TraitsXML?
-  ]
+interface CollectionXML extends RunInfoAttrs {
+  test: TestXML[]
+}
+
+interface AssemblyXML extends RunInfoAttrs {
+  '@_run-date': string
+  '@_run-time': string
+  collection: CollectionXML[]
+}
+
+interface ReportXML {
+  assemblies: {
+    assembly: AssemblyXML
+  }
+}
+
+interface XUnitMochaReporterOptions {
+  // configures the file to write reports to
+  mochaFile: string
+  // if set to a truthy value will parse the test title for tags
+  addTags?: boolean
+  // the name for the assembly element (default: 'Mocha Tests')
+  assemblyName?: string
+  // if truthy, generate XRay-compatible report
+  xrayReport?: boolean
+  // if set to a truthy value pending tests will be included in the report
+  includePending?: boolean
+  // if set to a truthy value the produced XML will be logged to the console
+  toConsole?: boolean
 }
 
 /**
@@ -126,11 +159,12 @@ interface CollectionXML {
  * @param {Object} options - mocha options
  */
 class XUnitMochaReporter extends reporters.Base {
-  _options: any
-  _runner: any
+  _options: XUnitMochaReporterOptions
+  _runner: Mocha.Runner
 
+  // used to track the "place in the collection stack" we are in
+  _collectionQueue: CollectionXML[] = []
   collections: CollectionXML[] = []
-  collectionQueue: CollectionXML[] = []
 
   constructor(runner: Runner, options: MochaOptions) {
     super(runner, options)
@@ -142,7 +176,7 @@ class XUnitMochaReporter extends reporters.Base {
 
     // remove old results
     this._runner.on('start', () => {
-      if (fs.existsSync(this._options.mochaFile)) {
+      if (!this._options.xrayReport && fs.existsSync(this._options.mochaFile)) {
         fs.unlinkSync(this._options.mochaFile)
       }
     })
@@ -157,7 +191,7 @@ class XUnitMochaReporter extends reporters.Base {
         )
         const collection = this.getCollectionData(suite)
         this.collections.push(collection)
-        this.collectionQueue.push(collection)
+        this._collectionQueue.push(collection)
       }
     })
 
@@ -166,23 +200,23 @@ class XUnitMochaReporter extends reporters.Base {
         'completed suite:',
         suite?.title || (suite.root ? '[Root suite]' : '[Unknown suite]')
       )
-      this.collectionQueue.pop()
+      this._collectionQueue.pop()
     })
 
     this._runner.on('pass', (test: Mocha.Test) => {
       debug('test passed:', test.title)
-      this.lastCollection().push(this.getTestData(test, STATUS.PASSED))
+      this.lastCollection().test.push(this.getTestData(test, STATUS.PASSED))
     })
 
     this._runner.on('fail', (test: Mocha.Test) => {
       debug('test failed:', test.title)
-      this.lastCollection().push(this.getTestData(test, STATUS.FAILED))
+      this.lastCollection().test.push(this.getTestData(test, STATUS.FAILED))
     })
 
     if (this._options.includePending) {
       this._runner.on('pending', (test: Mocha.Test) => {
         debug('test pending:', test.title)
-        this.lastCollection().push(this.getTestData(test, STATUS.SKIPPED))
+        this.lastCollection().test.push(this.getTestData(test, STATUS.SKIPPED))
       })
     }
 
@@ -194,22 +228,17 @@ class XUnitMochaReporter extends reporters.Base {
 
   getCollectionData(suite: Mocha.Suite): CollectionXML {
     return {
-      collection: [
-        {
-          _attr: {
-            name: suite.title || 'Root Suite',
-            total: suite.tests.length,
-            failed: 0,
-            skipped: 0,
-            passed: 0,
-            time: 0,
-          },
-        },
-      ],
+      '@_name': suite.title || 'Root Suite',
+      '@_total': suite.tests.length,
+      '@_failed': 0,
+      '@_skipped': 0,
+      '@_passed': 0,
+      '@_time': 0,
+      test: [],
     }
   }
 
-  getTestData(test: Mocha.Test, status?: STATUS) {
+  getTestData(test: Mocha.Test, status: STATUS) {
     let name = stripAnsi(test.title)
 
     let tagResult: ReturnType<typeof getTags> | undefined
@@ -220,23 +249,16 @@ class XUnitMochaReporter extends reporters.Base {
       }
     }
 
-    const testCase = {
-      test: [
-        {
-          _attr: {
-            name,
-            time:
-              typeof test.duration === 'undefined' ? 0 : test.duration / 1000,
-            result: status,
-          },
-        },
-      ],
-    } as TestXML
+    const testCase: TestXML = {
+      '@_name': name,
+      '@_time': typeof test.duration === 'undefined' ? 0 : test.duration / 1000,
+      '@_result': status,
+    }
 
     let allTags = {} as Tags
 
-    this.collectionQueue.forEach((collection) => {
-      const tagResult = getTags(collection.collection[0]._attr.name)
+    this._collectionQueue.forEach((collection) => {
+      const tagResult = getTags(collection['@_name'])
       if (tagResult && tagResult.tags) {
         allTags = { ...allTags, ...tagResult.tags }
       }
@@ -247,25 +269,19 @@ class XUnitMochaReporter extends reporters.Base {
     }
 
     if (Object.keys(allTags).length > 0) {
-      testCase.test.push(({
-        // assign the initial traits information
-        traits: [],
-      } as unknown) as TraitsXML)
-      ;(Object.keys(allTags) as Array<keyof TestAttrs>).forEach((tagName) => {
+      testCase.traits = { trait: [] }
+      // loop over the attributes of TestAttrs (minus method and type)
+      ;(Object.keys(allTags) as Array<
+        keyof Omit<TestAttrs, '@_method' | '@_type'>
+      >).forEach((tagName) => {
         let tagValue = ''
         if (allTags[tagName]) {
           tagValue = allTags[tagName]
         }
-        const [, traits] = testCase.test
-        traits!.traits.push({
-          trait: [
-            {
-              _attr: {
-                name: tagName,
-                value: tagValue,
-              },
-            },
-          ],
+        const traits = testCase.traits!
+        traits.trait.push({
+          '@_name': tagName,
+          '@_value': tagValue,
         })
       })
     }
@@ -274,7 +290,7 @@ class XUnitMochaReporter extends reporters.Base {
   }
 
   lastCollection() {
-    return this.collectionQueue.slice(-1)[0].collection
+    return this._collectionQueue.slice(-1)[0]
   }
 
   // noinspection JSUnusedGlobalSymbols
@@ -287,119 +303,166 @@ class XUnitMochaReporter extends reporters.Base {
   }
 
   flush(collections: CollectionXML[]) {
-    const xml = this.getXml(collections)
-
-    this.writeXmlToDisk(xml, this._options.mochaFile)
-
-    if (this._options.toConsole) {
-      console.log(xml) // eslint-disable-line no-console
+    try {
+      const xml = this.getXml(collections)
+      this.writeXmlToDisk(xml, this._options.mochaFile)
+      if (this._options.toConsole) {
+        console.log(xml) // eslint-disable-line no-console
+      }
+    } catch (e) {
+      if (typeof e === typeof NoCollectionError) {
+        xray('all collections have been filtered out')
+      }
     }
   }
 
   getXml(collections: CollectionXML[]): string {
-    const isTest = (test: any): test is TestXML => {
-      return (test as TestXML).test !== undefined
-    }
-
-    const isCollection = (collection: any): collection is CollectionXML => {
-      return (collection as CollectionXML).collection !== undefined
-    }
-
-    const addTime = (a: { time: number }, b: { time: number }) => {
-      a.time *= 1000 // convert time to milliseconds
-      a.time += b.time * 1000 // then add (by mutating the time object)
-      a.time /= 1000 // then convert back to seconds
+    const addTime = (c: CollectionXML, t: CollectionXML | TestXML) => {
+      c['@_time'] *= 1000 // convert time to milliseconds
+      c['@_time'] += t['@_time'] * 1000 // then add (by mutating the time object)
+      c['@_time'] /= 1000 // then convert back to seconds
     }
 
     const stats = this._runner.stats
 
-    const summarizeCollection = (
-      collection: CollectionXML,
-      parent?: CollectionXML
-    ) => {
-      const [{ _attr: collectionAttrs }, ...items] = collection.collection
+    const filteredCollections = collections
+      .map((collection) => {
+        const tests =
+          collection.test === undefined
+            ? undefined
+            : Array.isArray(collection.test)
+            ? collection.test
+            : [collection.test]
 
-      collectionAttrs.failed = 0
-      collectionAttrs.passed = 0
-      collectionAttrs.total = 0
-      collectionAttrs.time = 0
-      collectionAttrs.skipped = 0
+        collection['@_failed'] = 0
+        collection['@_passed'] = 0
+        collection['@_total'] = 0
+        collection['@_time'] = 0
+        collection['@_skipped'] = 0
 
-      items.forEach((item) => {
-        if (isTest(item)) {
-          if (item!.test[0]._attr.result === STATUS.SKIPPED) {
-            collectionAttrs.skipped++
-            collectionAttrs.total++
-          }
-          if (item!.test[0]._attr.result === STATUS.FAILED) {
-            collectionAttrs.failed++
-            collectionAttrs.total++
-          }
-          if (item!.test[0]._attr.result === STATUS.PASSED) {
-            collectionAttrs.passed++
-            collectionAttrs.total++
-          }
+        if (tests) {
+          tests.forEach((_test) => {
+            if (_test['@_result'] === STATUS.SKIPPED) {
+              collection['@_skipped']++
+              collection['@_total']++
+            }
+            if (_test['@_result'] === STATUS.FAILED) {
+              collection['@_failed']++
+              collection['@_total']++
+            }
+            if (_test['@_result'] === STATUS.PASSED) {
+              collection['@_passed']++
+              collection['@_total']++
+            }
 
-          addTime(collectionAttrs, item!.test[0]._attr)
-        } else if (isCollection(item)) {
-          summarizeCollection(item, collection)
+            addTime(collection, _test)
+          })
         }
+        if (this._options.xrayReport) {
+          if (!tests) {
+            return
+          }
+          collection.test = tests.filter((_test) => {
+            if (!_test.traits || !_test.traits.trait) {
+              return false
+            }
+            return _test.traits.trait.some((t) => t['@_name'] === 'test')
+          })
+        }
+        return collection
       })
+      // remove empty collections
+      .filter((c) => !!c) as CollectionXML[]
 
-      if (parent) {
-        const [{ _attr: parentAttrs }] = parent.collection
-        parentAttrs.total += collectionAttrs.total
-        parentAttrs.passed += collectionAttrs.passed
-        parentAttrs.skipped += collectionAttrs.skipped
-        parentAttrs.failed += collectionAttrs.failed
+    const rootCollection = filteredCollections[0]
 
-        addTime(parentAttrs, collectionAttrs)
-      }
+    if (!rootCollection) {
+      throw new NoCollectionError()
     }
 
-    collections.forEach((collection) => summarizeCollection(collection))
-
-    const [{ _attr: rootAttrs }] = collections[0].collection
-
-    const assembly = {
-      assembly: [
-        {
-          _attr: {
-            name: this._options.assemblyName,
-            total: rootAttrs.total,
-            failed: rootAttrs.failed,
-            skipped: rootAttrs.skipped,
-            passed: rootAttrs.passed,
-            time: rootAttrs.time,
-            'run-date': stats.start.toISOString().split('T')[0],
-            'run-time': stats.start
-              .toISOString()
-              .split('T')[1]
-              .split('.')[0],
-          },
+    const report: ReportXML = {
+      assemblies: {
+        assembly: {
+          '@_name': this._options.assemblyName ?? 'Mocha Tests',
+          '@_total': rootCollection['@_total'],
+          '@_failed': rootCollection['@_failed'],
+          '@_skipped': rootCollection['@_skipped'],
+          '@_passed': rootCollection['@_passed'],
+          '@_time': rootCollection['@_time'],
+          '@_run-date': stats!.start!.toISOString().split('T')[0],
+          '@_run-time': stats!
+            .start!.toISOString()
+            .split('T')[1]
+            .split('.')[0],
+          collection: this._options.xrayReport
+            ? collections.filter((c) => c.test && c.test.length > 0)
+            : collections,
         },
-        ...collections,
-      ],
+      },
     }
 
-    return xml(
-      {
-        assemblies: [assembly],
-      },
-      { declaration: true, indent: '  ' }
-    )
+    return new parser.j2xParser(DEFAULT_PARSER_OPTIONS).parse(report)
   }
 
   writeXmlToDisk(xml: string, filePath: string) {
     if (filePath) {
-      if (filePath.indexOf('[hash]') !== -1) {
+      if (this._options.xrayReport) {
+        debug('Attempting to combine output...')
+        try {
+          // combine the files
+          const previousReport: ReportXML = parser.parse(
+            fs.readFileSync(filePath, 'utf-8'),
+            DEFAULT_PARSER_OPTIONS
+          )
+          const currentReport: ReportXML = parser.parse(
+            xml,
+            DEFAULT_PARSER_OPTIONS
+          )
+
+          combine('previousReport:', JSON.stringify(previousReport, null, 2))
+          combine('currentReport:', JSON.stringify(currentReport, null, 2))
+
+          const previous = previousReport.assemblies.assembly
+          const current = currentReport.assemblies.assembly
+
+          if (Array.isArray(previous.collection)) {
+            previous.collection.push(
+              ...(Array.isArray(current.collection)
+                ? current.collection
+                : [current.collection])
+            )
+          } else {
+            previous.collection = [
+              previous.collection,
+              ...(Array.isArray(current.collection)
+                ? current.collection
+                : [current.collection]),
+            ]
+          }
+
+          xml = new parser.j2xParser(DEFAULT_PARSER_OPTIONS).parse(
+            previousReport
+          )
+          debug('combined output into:', filePath)
+        } catch (e) {
+          combine('error:', e)
+          debug('nothing to combine, continuing...')
+        }
+      } else if (
+        !this._options.xrayReport &&
+        filePath.indexOf('[hash]') !== -1
+      ) {
         filePath = filePath.replace('[hash]', md5(xml))
       }
 
       mkdirp.sync(path.dirname(filePath))
 
       try {
-        fs.writeFileSync(filePath, xml, 'utf-8')
+        fs.writeFileSync(
+          filePath,
+          '<?xml version="1.0" encoding="utf-8"?>' + xml,
+          'utf-8'
+        )
       } catch (exc) {
         // eslint-disable-next-line no-console
         console.error('problem writing results: ' + exc)

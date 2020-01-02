@@ -1,6 +1,6 @@
 const xml = require('xml')
 
-module.exports = function(stats) {
+module.exports = function(stats, options) {
   const data = {
     assemblies: [
       {
@@ -163,6 +163,15 @@ module.exports = function(stats) {
         ],
       },
     ],
+  }
+
+  if (options && options.xrayReport) {
+    const [attrs, , ...rest] = data.assemblies[0].assembly
+    const filtered = {
+      assemblies: [{}],
+    }
+    filtered.assemblies[0].assembly = [attrs, ...rest]
+    return xml(filtered, { declaration: true })
   }
 
   return xml(data, { declaration: true })

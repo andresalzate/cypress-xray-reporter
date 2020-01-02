@@ -83,10 +83,11 @@ the outputted test element will look as follows:
 
 ### Full configuration options
 
-| Parameter      | Effect                                                                  |
-| -------------- | ----------------------------------------------------------------------- |
-| mochaFile      | configures the file to write reports to                                 |
-| includePending | if set to a truthy value pending tests will be included in the report   |
-| toConsole      | if set to a truthy value the produced XML will be logged to the console |
-| assemblyName   | the name for the assembly element. (defaults to 'Mocha Tests')          |
-| addTags        | if set to a truthy value will parse the test title for tags             |
+| Parameter      | Effect                                                                                                                          |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| mochaFile      | configures the file to write reports to                                                                                         |
+| xrayReport     | if truthy, will filter out empty collections, only report tests with traits, and generally make the report compatible with XRay |
+| includePending | if set to a truthy value pending tests will be included in the report                                                           |
+| toConsole      | if set to a truthy value the produced XML will be logged to the console                                                         |
+| assemblyName   | the name for the assembly element. (defaults to 'Mocha Tests')                                                                  |
+| addTags        | if set to a truthy value will parse the test title for tags                                                                     |
