@@ -14,11 +14,11 @@ const chaiXML = require('chai-xml')
 const mockXml = require('./mock-results')
 const testConsole = require('test-console')
 
-const debug = require('debug')('xunit-mocha-reporter:tests')
+const debug = require('debug')('cypress-xray-reporter:tests')
 
 chai.use(chaiXML)
 
-describe('xunit-mocha-reporter', () => {
+describe('cypress-xray-reporter', () => {
   let runner
   let filePath
   let MOCHA_FILE

@@ -1,5 +1,5 @@
 {
-  "name": "xunit-mocha-reporter",
+  "name": "cypress-xray-reporter",
   "version": "2.1.0",
   "description": "An XUnit Reporter for Mocha",
   "main": "dist/index.js",
@@ -58,7 +58,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MGMResorts/xunit-mocha-reporter.git"
+    "url": "git+https://github.com/MGMResorts/cypress-xray-reporter.git"
   },
   "keywords": [
     "mocha",
@@ -72,7 +72,7 @@
     "Patrick Assuied (https://github.com/passuied)"
   ],
   "bugs": {
-    "url": "https://github.com/MGMResorts/xunit-mocha-reporter/issues"
+    "url": "https://github.com/MGMResorts/cypress-xray-reporter/issues"
   },
-  "homepage": "https://github.com/MGMResorts/xunit-mocha-reporter#readme"
+  "homepage": "https://github.com/MGMResorts/cypress-xray-reporter#readme"
 }

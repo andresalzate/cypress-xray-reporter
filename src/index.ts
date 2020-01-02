@@ -7,9 +7,9 @@ import path from 'path'
 import mkdirp from 'mkdirp'
 import md5 from 'md5'
 
-const debug = require('debug')('xunit-mocha-reporter'),
-  combine = require('debug')('xunit-mocha-reporter:combine'),
-  xray = require('debug')('xunit-mocha-reporter:xray')
+const debug = require('debug')('cypress-xray-reporter'),
+  combine = require('debug')('cypress-xray-reporter:combine'),
+  xray = require('debug')('cypress-xray-reporter:xray')
 const parser = require('fast-xml-parser')
 const he = require('he')
 const stripAnsi = require('strip-ansi')
@@ -153,8 +153,8 @@ interface XUnitMochaReporterOptions {
 }
 
 /**
- * XUnit reporter for mocha.js.
- * @module xunit-mocha-reporter
+ * Cypress XRay Reporter for mocha.js.
+ * @module cypress-xray-reporter
  * @param {EventEmitter} runner - the test runner
  * @param {Object} options - mocha options
  */

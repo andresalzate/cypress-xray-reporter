@@ -1,4 +1,4 @@
-# xunit-mocha-reporter
+# cypress-xray-reporter
 
 A Mocha xunit reporter. Produces XUnit-style XML test results.
 Adapted from and Inspired by [mocha-xunit-reporter](https://github.com/passuied/mocha-xunit-reporter)
@@ -6,21 +6,21 @@ Adapted from and Inspired by [mocha-xunit-reporter](https://github.com/passuied/
 ## Installation
 
 ```bash
-$ npm install xunit-mocha-reporter --save-dev
+$ npm install cypress-xray-reporter --save-dev
 ```
 
 or as a global module
 
 ```bash
-$ npm install -g xunit-mocha-reporter
+$ npm install -g cypress-xray-reporter
 ```
 
 ## Usage
 
-Run mocha with `xunit-mocha-reporter`:
+Run mocha with `cypress-xray-reporter`:
 
 ```bash
-$ mocha test --reporter xunit-mocha-reporter
+$ mocha test --reporter cypress-xray-reporter
 ```
 
 This will output a results file at `./test-results.xml`.
@@ -28,20 +28,20 @@ This will output a results file at `./test-results.xml`.
 You may optionally declare an alternate location for rexults XML file by setting the environment variable `MOCHA_FILE` or specifying `mochaFile` in `reporterOptions`:
 
 ```bash
-$ MOCHA_FILE=./path_to_your/file.xml mocha test --reporter xunit-mocha-reporter
+$ MOCHA_FILE=./path_to_your/file.xml mocha test --reporter cypress-xray-reporter
 ```
 
 or
 
 ```bash
-$ mocha test --reporter xunit-mocha-reporter --reporter-options mochaFile=./path_to_your/file.xml
+$ mocha test --reporter cypress-xray-reporter --reporter-options mochaFile=./path_to_your/file.xml
 ```
 
 or
 
 ```javascript
 var mocha = new Mocha({
-  reporter: 'xunit-mocha-reporter',
+  reporter: 'cypress-xray-reporter',
   reporterOptions: {
     mochaFile: './path_to_your/file.xml',
   },
@@ -55,7 +55,7 @@ var mocha = new Mocha({
 
 ```javascript
 var mocha = new Mocha({
-  reporter: 'xunit-mocha-reporter',
+  reporter: 'cypress-xray-reporter',
   reporterOptions: {
     mochaFile: './path_to_your/file.xml',
     addTags: true,
