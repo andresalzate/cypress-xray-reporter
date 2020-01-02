@@ -7,7 +7,7 @@ suitable for XRay upload. Adapted from and Inspired by
 ## Installation
 
 ```bash
-$ yarn add -D https://git@github.com/MGMResorts/cypress-xray-reporter.git#1.0.0
+$ yarn add -D https://git@github.com/MGMResorts/cypress-xray-reporter.git#1.0.1
 ```
 
 ## Usage
