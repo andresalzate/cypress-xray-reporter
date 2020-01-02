@@ -50,10 +50,7 @@ function configureDefaults(options?: MochaOptions) {
 }
 
 function isInvalidSuite(suite: Mocha.Suite) {
-  return (
-    (!suite.root && !suite.title) ||
-    (suite.tests.length === 0 && suite.suites.length === 0)
-  )
+  return (!suite.root && !suite.title) || (suite.tests.length === 0 && suite.suites.length === 0)
 }
 
 type Tags = { [K in keyof TestAttrs]: string }
@@ -185,10 +182,7 @@ class XUnitMochaReporter extends reporters.Base {
       if (isInvalidSuite(suite)) {
         debug('suite is invalid:', suite)
       } else {
-        debug(
-          'running suite:',
-          suite?.title || (suite.root ? '[Root suite]' : '[Unknown suite]')
-        )
+        debug('running suite:', suite?.title || (suite.root ? '[Root suite]' : '[Unknown suite]'))
         const collection = this.getCollectionData(suite)
         this.collections.push(collection)
         this._collectionQueue.push(collection)
@@ -196,10 +190,7 @@ class XUnitMochaReporter extends reporters.Base {
     })
 
     this._runner.on('suite end', (suite: Mocha.Suite) => {
-      debug(
-        'completed suite:',
-        suite?.title || (suite.root ? '[Root suite]' : '[Unknown suite]')
-      )
+      debug('completed suite:', suite?.title || (suite.root ? '[Root suite]' : '[Unknown suite]'))
       this._collectionQueue.pop()
     })
 
@@ -271,9 +262,7 @@ class XUnitMochaReporter extends reporters.Base {
     if (Object.keys(allTags).length > 0) {
       testCase.traits = { trait: [] }
       // loop over the attributes of TestAttrs (minus method and type)
-      ;(Object.keys(allTags) as Array<
-        keyof Omit<TestAttrs, '@_method' | '@_type'>
-      >).forEach((tagName) => {
+      ;(Object.keys(allTags) as Array<keyof Omit<TestAttrs, '@_method' | '@_type'>>).forEach((tagName) => {
         let tagValue = ''
         if (allTags[tagName]) {
           tagValue = allTags[tagName]
@@ -296,8 +285,7 @@ class XUnitMochaReporter extends reporters.Base {
   // noinspection JSUnusedGlobalSymbols
   removeInvalidCharacters = (input: string) => {
     return INVALID_CHARACTERS.reduce(
-      (text, invalidCharacter) =>
-        text.replace(new RegExp(invalidCharacter, 'g'), ''),
+      (text, invalidCharacter) => text.replace(new RegExp(invalidCharacter, 'g'), ''),
       input
     )
   }
@@ -394,9 +382,7 @@ class XUnitMochaReporter extends reporters.Base {
             .start!.toISOString()
             .split('T')[1]
             .split('.')[0],
-          collection: this._options.xrayReport
-            ? collections.filter((c) => c.test && c.test.length > 0)
-            : collections,
+          collection: this._options.xrayReport ? collections.filter((c) => c.test && c.test.length > 0) : collections,
         },
       },
     }
@@ -410,14 +396,8 @@ class XUnitMochaReporter extends reporters.Base {
         debug('Attempting to combine output...')
         try {
           // combine the files
-          const previousReport: ReportXML = parser.parse(
-            fs.readFileSync(filePath, 'utf-8'),
-            DEFAULT_PARSER_OPTIONS
-          )
-          const currentReport: ReportXML = parser.parse(
-            xml,
-            DEFAULT_PARSER_OPTIONS
-          )
+          const previousReport: ReportXML = parser.parse(fs.readFileSync(filePath, 'utf-8'), DEFAULT_PARSER_OPTIONS)
+          const currentReport: ReportXML = parser.parse(xml, DEFAULT_PARSER_OPTIONS)
 
           combine('previousReport:', JSON.stringify(previousReport, null, 2))
           combine('currentReport:', JSON.stringify(currentReport, null, 2))
@@ -426,43 +406,28 @@ class XUnitMochaReporter extends reporters.Base {
           const current = currentReport.assemblies.assembly
 
           if (Array.isArray(previous.collection)) {
-            previous.collection.push(
-              ...(Array.isArray(current.collection)
-                ? current.collection
-                : [current.collection])
-            )
+            previous.collection.push(...(Array.isArray(current.collection) ? current.collection : [current.collection]))
           } else {
             previous.collection = [
               previous.collection,
-              ...(Array.isArray(current.collection)
-                ? current.collection
-                : [current.collection]),
+              ...(Array.isArray(current.collection) ? current.collection : [current.collection]),
             ]
           }
 
-          xml = new parser.j2xParser(DEFAULT_PARSER_OPTIONS).parse(
-            previousReport
-          )
+          xml = new parser.j2xParser(DEFAULT_PARSER_OPTIONS).parse(previousReport)
           debug('combined output into:', filePath)
         } catch (e) {
           combine('error:', e)
           debug('nothing to combine, continuing...')
         }
-      } else if (
-        !this._options.xrayReport &&
-        filePath.indexOf('[hash]') !== -1
-      ) {
+      } else if (!this._options.xrayReport && filePath.indexOf('[hash]') !== -1) {
         filePath = filePath.replace('[hash]', md5(xml))
       }
 
       mkdirp.sync(path.dirname(filePath))
 
       try {
-        fs.writeFileSync(
-          filePath,
-          '<?xml version="1.0" encoding="utf-8"?>' + xml,
-          'utf-8'
-        )
+        fs.writeFileSync(filePath, '<?xml version="1.0" encoding="utf-8"?>' + xml, 'utf-8')
       } catch (exc) {
         // eslint-disable-next-line no-console
         console.error('problem writing results: ' + exc)

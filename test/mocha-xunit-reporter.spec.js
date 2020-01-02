@@ -43,19 +43,14 @@ describe('cypress-xray-reporter', () => {
 
     const { invalidChar } = options
 
-    runner.fail(
-      new Test('Bar can narfle the garthog', 'can narfle the garthog', 1),
-      { stack: invalidChar + 'expected garthog to be dead' + invalidChar }
-    )
+    runner.fail(new Test('Bar can narfle the garthog', 'can narfle the garthog', 1), {
+      stack: invalidChar + 'expected garthog to be dead' + invalidChar,
+    })
 
-    runner.fail(
-      new Test('Baz can behave like a flandip', 'can behave like a flandip', 1),
-      {
-        name: 'BazError',
-        message:
-          'expected baz to be masher, a hustler, an uninvited grasper of cone',
-      }
-    )
+    runner.fail(new Test('Baz can behave like a flandip', 'can behave like a flandip', 1), {
+      name: 'BazError',
+      message: 'expected baz to be masher, a hustler, an uninvited grasper of cone',
+    })
     const anotherSuite = {
       title: '@test=A Another suite!',
       tests: [1],
@@ -96,8 +91,7 @@ describe('cypress-xray-reporter', () => {
 
     parts.reduce((testPath) => {
       if (fs.existsSync(__dirname + testPath)) {
-        const removeFile =
-          testPath.indexOf('.') === -1 ? 'rmdirSync' : 'unlinkSync'
+        const removeFile = testPath.indexOf('.') === -1 ? 'rmdirSync' : 'unlinkSync'
         fs[removeFile](__dirname + testPath)
       }
 
@@ -344,8 +338,7 @@ describe('cypress-xray-reporter', () => {
 
     it('should generate attributes for addTags=true and tags in test title', () => {
       const modTestCase = { ...mockedTestCase }
-      modTestCase.title =
-        'should behave like so @aid=EPM-DP-C1234 @sid=EPM-1234 @type=Integration'
+      modTestCase.title = 'should behave like so @aid=EPM-DP-C1234 @sid=EPM-1234 @type=Integration'
       reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true })
       const testCase = reporter.getTestData(modTestCase)
       expect(testCase['@_name']).to.equal('should behave like so')
@@ -357,8 +350,7 @@ describe('cypress-xray-reporter', () => {
 
     it('should generate attributes for addTags=true and tags in test title in quotes', () => {
       const modTestCase = { ...mockedTestCase }
-      modTestCase.title =
-        'should behave like so @aid="test TAG 1" @sid=\'TEST tag 2\' @type=Integration'
+      modTestCase.title = 'should behave like so @aid="test TAG 1" @sid=\'TEST tag 2\' @type=Integration'
       reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true })
       const testCase = reporter.getTestData(modTestCase)
       expect(testCase['@_name']).to.equal('should behave like so')
@@ -376,8 +368,7 @@ describe('cypress-xray-reporter', () => {
 
     it('should generate traits for addTags=true and tags in test title', () => {
       const modTestCase = { ...mockedTestCase }
-      modTestCase.title =
-        'should behave like so @aid=EPM-DP-C1234 @sid=EPM-1234 @type=Integration'
+      modTestCase.title = 'should behave like so @aid=EPM-DP-C1234 @sid=EPM-1234 @type=Integration'
       reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true })
       const testCase = reporter.getTestData(modTestCase)
       expect(testCase.traits.trait[0]['@_value']).to.equal('EPM-DP-C1234')
@@ -388,8 +379,7 @@ describe('cypress-xray-reporter', () => {
 
     it('should generate traits for addTags=true and tags in test title in quotes', () => {
       const modTestCase = { ...mockedTestCase }
-      modTestCase.title =
-        'should behave like so @aid="test TAG 1" @sid=\'TEST tag 2\' @type=Integration'
+      modTestCase.title = 'should behave like so @aid="test TAG 1" @sid=\'TEST tag 2\' @type=Integration'
       reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true })
       const testCase = reporter.getTestData(modTestCase)
       expect(testCase['@_name']).to.equal('should behave like so')
