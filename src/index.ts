@@ -11,7 +11,6 @@ const debug = require('debug')('cypress-xray-reporter'),
   combine = require('debug')('cypress-xray-reporter:combine'),
   xray = require('debug')('cypress-xray-reporter:xray')
 const parser = require('fast-xml-parser')
-const he = require('he')
 const stripAnsi = require('strip-ansi')
 
 enum STATUS {
@@ -26,16 +25,7 @@ class NoCollectionError extends Error {
 
 // A subset of invalid characters as defined in http://www.w3.org/TR/xml/#charsets that can occur in e.g. stacktraces
 const INVALID_CHARACTERS = ['\u001b']
-
-const DEFAULT_PARSER_OPTIONS = {
-  ignoreAttributes: false,
-  tagValueProcessor: (a: string) => he.encode(a, { useNamedReferences: true }),
-  attrValueProcessor: (a: string) =>
-    he.encode(a, {
-      isAttributeValue: true,
-      useNamedReferences: true,
-    }),
-}
+const DEFAULT_PARSER_OPTIONS = { ignoreAttributes: false }
 
 function configureDefaults(options?: MochaOptions) {
   const { reporterOptions } = options ?? {}

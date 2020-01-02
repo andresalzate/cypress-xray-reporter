@@ -14,7 +14,6 @@ const debug = require('debug')('cypress-xray-reporter'),
   combine = require('debug')('cypress-xray-reporter:combine'),
   xray = require('debug')('cypress-xray-reporter:xray')
 const parser = require('fast-xml-parser')
-const he = require('he')
 const stripAnsi = require('strip-ansi')
 var STATUS
 ;(function(STATUS) {
@@ -29,15 +28,7 @@ class NoCollectionError extends Error {
   }
 }
 const INVALID_CHARACTERS = ['\u001b']
-const DEFAULT_PARSER_OPTIONS = {
-  ignoreAttributes: false,
-  tagValueProcessor: (a) => he.encode(a, { useNamedReferences: true }),
-  attrValueProcessor: (a) =>
-    he.encode(a, {
-      isAttributeValue: true,
-      useNamedReferences: true,
-    }),
-}
+const DEFAULT_PARSER_OPTIONS = { ignoreAttributes: false }
 function configureDefaults(options) {
   const { reporterOptions } = options !== null && options !== void 0 ? options : {}
   return Object.assign(
