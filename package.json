@@ -54,7 +54,7 @@
     "he": "^1.2.0"
   },
   "peerDependencies": {
-    "mocha": ">=2.2.5"
+    "cypress": ">=3.0.0"
   },
   "repository": {
     "type": "git",
@@ -63,7 +63,9 @@
   "keywords": [
     "mocha",
     "xunit",
-    "report"
+    "report",
+    "cypress",
+    "xray"
   ],
   "author": "Julian Coy",
   "license": "MIT",
