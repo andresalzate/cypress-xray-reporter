@@ -179,6 +179,10 @@ class XUnitMochaReporter extends mocha_1.reporters.Base {
           tagValue = allTags[tagName]
         }
         const traits = testCase.traits
+        if (this._options.xrayReport && tagName === 'requirement') {
+          testCase['@_type'] = tagValue
+          testCase['@_method'] = testCase['@_name']
+        }
         traits.trait.push({
           '@_name': tagName,
           '@_value': tagValue,

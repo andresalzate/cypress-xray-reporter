@@ -43,8 +43,6 @@ function isInvalidSuite(suite: Mocha.Suite) {
   return (!suite.root && !suite.title) || (suite.tests.length === 0 && suite.suites.length === 0)
 }
 
-type Tags = { [K in keyof TestAttrs]: string }
-
 /**
  * Parses title for tags in format @tagName=value
  * @param {} testTitle
@@ -54,7 +52,7 @@ function getTags(testTitle: string) {
   const regexTag = /@([A-Za-z]+)=(?:"([\w\d\s-]+)"|'([\w\d\s-]+)'|([\w\d-]+))/i
 
   const result = {
-    tags: {} as Tags,
+    tags: {} as any,
     cleanTitle: testTitle,
     tagsFound: false,
   }
@@ -71,7 +69,7 @@ function getTags(testTitle: string) {
 
       result.cleanTitle = result.cleanTitle.replace(tag, '')
       if (key) {
-        result.tags[key as keyof TestAttrs] = value
+        result.tags[key] = value
       }
     })
   }
@@ -236,7 +234,7 @@ class XUnitMochaReporter extends reporters.Base {
       '@_result': status,
     }
 
-    let allTags = {} as Tags
+    let allTags = {} as any
 
     this._collectionQueue.forEach((collection) => {
       const tagResult = getTags(collection['@_name'])
@@ -252,12 +250,16 @@ class XUnitMochaReporter extends reporters.Base {
     if (Object.keys(allTags).length > 0) {
       testCase.traits = { trait: [] }
       // loop over the attributes of TestAttrs (minus method and type)
-      ;(Object.keys(allTags) as Array<keyof Omit<TestAttrs, '@_method' | '@_type'>>).forEach((tagName) => {
+      Object.keys(allTags).forEach((tagName) => {
         let tagValue = ''
         if (allTags[tagName]) {
           tagValue = allTags[tagName]
         }
         const traits = testCase.traits!
+        if (this._options.xrayReport && tagName === 'requirement') {
+          testCase['@_type'] = tagValue
+          testCase['@_method'] = testCase['@_name']
+        }
         traits.trait.push({
           '@_name': tagName,
           '@_value': tagValue,
