@@ -191,7 +191,7 @@ describe('cypress-xray-reporter', () => {
     verifyMochaFile(filePath)
   })
 
-  it('filters out collections without "@test" attributes when "xrayReport" is specified', () => {
+  it('filters out collections without "@requirement" attributes when "xrayReport" is specified', () => {
     const mochaFile = 'test/mocha.xml'
     createReporter({
       mochaFile,

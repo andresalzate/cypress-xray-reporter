@@ -253,7 +253,7 @@ class XUnitMochaReporter extends mocha_1.reporters.Base {
             if (!_test.traits || !_test.traits.trait) {
               return false
             }
-            return _test.traits.trait.some((t) => t['@_name'] === 'test')
+            return _test.traits.trait.some((t) => t['@_name'] === 'requirement')
           })
         }
         return collection

@@ -166,12 +166,9 @@ module.exports = function(stats, options) {
   }
 
   if (options && options.xrayReport) {
-    const [attrs, , ...rest] = data.assemblies[0].assembly
-    const filtered = {
-      assemblies: [{}],
-    }
-    filtered.assemblies[0].assembly = [attrs, ...rest]
-    return xml(filtered, { declaration: true })
+    const [first] = data.assemblies[0].assembly
+    data.assemblies[0].assembly = [first]
+    return xml(data, { declaration: true })
   }
 
   return xml(data, { declaration: true })
