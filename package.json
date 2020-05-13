@@ -1,10 +1,10 @@
 {
   "name": "cypress-xray-reporter",
-  "version": "1.1.1",
+  "version": "2.0.0",
   "description": "An XUnit Reporter for Mocha",
   "main": "dist/index.js",
   "engines": {
-    "node": "=8.10.0"
+    "node": "~12.16.1"
   },
   "scripts": {
     "build": "tsc && yarn format",
