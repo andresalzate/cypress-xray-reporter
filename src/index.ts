@@ -12,8 +12,9 @@ const debug = require('debug')('cypress-xray-reporter'),
   xray = require('debug')('cypress-xray-reporter:xray')
 const parser = require('fast-xml-parser')
 const stripAnsi = require('strip-ansi')
+const escapeXml = require('xml-escape')
 
-enum STATUS {
+export enum STATUS {
   PASSED = 'Pass',
   FAILED = 'Fail',
   SKIPPED = 'Skip',
@@ -207,7 +208,7 @@ class XUnitMochaReporter extends reporters.Base {
 
   getCollectionData(suite: Mocha.Suite): CollectionXML {
     return {
-      '@_name': suite.title || 'Root Suite',
+      '@_name': escapeXml(suite.title) || 'Root Suite',
       '@_total': suite.tests.length,
       '@_failed': 0,
       '@_skipped': 0,
@@ -224,7 +225,7 @@ class XUnitMochaReporter extends reporters.Base {
     if (this._options.addTags) {
       tagResult = getTags(name)
       if (tagResult.tagsFound) {
-        name = stripAnsi(tagResult.cleanTitle)
+        name = escapeXml(tagResult.cleanTitle)
       }
     }
 

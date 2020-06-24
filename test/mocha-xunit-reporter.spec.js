@@ -340,7 +340,7 @@ describe('cypress-xray-reporter', () => {
       const modTestCase = { ...mockedTestCase }
       modTestCase.title = 'should behave like so @aid=EPM-DP-C1234 @sid=EPM-1234 @type=Integration'
       reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true })
-      const testCase = reporter.getTestData(modTestCase)
+      const testCase = reporter.getTestData(modTestCase, 'Pass')
       expect(testCase['@_name']).to.equal('should behave like so')
       expect(testCase.traits.trait[0]['@_value']).to.equal('EPM-DP-C1234')
       expect(testCase.traits.trait[1]['@_value']).to.equal('EPM-1234')
@@ -352,7 +352,7 @@ describe('cypress-xray-reporter', () => {
       const modTestCase = { ...mockedTestCase }
       modTestCase.title = 'should behave like so @aid="test TAG 1" @sid=\'TEST tag 2\' @type=Integration'
       reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true })
-      const testCase = reporter.getTestData(modTestCase)
+      const testCase = reporter.getTestData(modTestCase, 'Pass')
       expect(testCase['@_name']).to.equal('should behave like so')
       expect(testCase.traits.trait[0]['@_value']).to.equal('test TAG 1')
       expect(testCase.traits.trait[1]['@_value']).to.equal('TEST tag 2')
@@ -362,7 +362,7 @@ describe('cypress-xray-reporter', () => {
 
     it('should still work for addTags=true and tags NOT in test title', () => {
       reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true })
-      const testCase = reporter.getTestData(mockedTestCase)
+      const testCase = reporter.getTestData(mockedTestCase, 'Pass')
       expect(testCase['@_name']).to.equal('should behave like so')
     })
 
@@ -370,10 +370,19 @@ describe('cypress-xray-reporter', () => {
       const modTestCase = { ...mockedTestCase }
       modTestCase.title = 'should behave like so @aid=EPM-DP-C1234 @sid=EPM-1234 @type=Integration'
       reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true })
-      const testCase = reporter.getTestData(modTestCase)
+      const testCase = reporter.getTestData(modTestCase, 'Pass')
       expect(testCase.traits.trait[0]['@_value']).to.equal('EPM-DP-C1234')
       expect(testCase.traits.trait[1]['@_value']).to.equal('EPM-1234')
       expect(testCase.traits.trait[2]['@_value']).to.equal('Integration')
+      validateTestCase(testCase)
+    })
+
+    it('should escape XML characters in test title', () => {
+      const modTestCase = { ...mockedTestCase }
+      modTestCase.title = 'should <> behave </> like so @aid=EPM-DP-C1234 @sid=EPM-1234 @type=Integration'
+      reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true })
+      const testCase = reporter.getTestData(modTestCase, 'Pass')
+      expect(testCase['@_name']).to.equal('should &lt;&gt; behave &lt;/&gt; like so')
       validateTestCase(testCase)
     })
 
@@ -381,7 +390,7 @@ describe('cypress-xray-reporter', () => {
       const modTestCase = { ...mockedTestCase }
       modTestCase.title = 'should behave like so @aid="test TAG 1" @sid=\'TEST tag 2\' @type=Integration'
       reporter = createReporter({ mochaFile: 'test/mocha.xml', addTags: true })
-      const testCase = reporter.getTestData(modTestCase)
+      const testCase = reporter.getTestData(modTestCase, 'Pass')
       expect(testCase['@_name']).to.equal('should behave like so')
       expect(testCase.traits.trait[0]['@_value']).to.equal('test TAG 1')
       expect(testCase.traits.trait[1]['@_value']).to.equal('TEST tag 2')

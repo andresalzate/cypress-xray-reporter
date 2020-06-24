@@ -81,6 +81,11 @@
   resolved "https://registry.yarnpkg.com/@types/normalize-package-data/-/normalize-package-data-2.4.0.tgz#e486d0d97396d79beedd0a6e33f4534ff6b4973e"
   integrity sha512-f5j5b/Gf71L+dbqxIpQ4Z2WlmI/mPJ0fOkGGmFgtb6sAu97EPczzbS3/tJKxmcYDj55OX6ssqwDAWOHIYDRDGA==
 
+"@types/xml-escape@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@types/xml-escape/-/xml-escape-1.1.0.tgz#b47d1e4544bae7732970482bf7bff5b4f7b18f68"
+  integrity sha512-N8/W8PkPrzkxPls5QMTA8TQrKgD456BarGG2XTJK3Ax2suCAyqUthbpfBccgpGTBhT7hNuGUSuJd4XlwSXlmuA==
+
 "@types/xml@^1.0.4":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@types/xml/-/xml-1.0.4.tgz#1d58786b913b1a5030da3a39662045de807c178d"
@@ -2906,6 +2911,11 @@ write@1.0.3:
   integrity sha512-/lg70HAjtkUgWPVZhZcm+T4hkL8Zbtp1nFNOn3lRrxnlv50SRBv7cR7RqR+GMsd3hUXy9hWBo4CHTbFTcOYwig==
   dependencies:
     mkdirp "^0.5.1"
+
+xml-escape@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/xml-escape/-/xml-escape-1.1.0.tgz#3904c143fa8eb3a0030ec646d2902a2f1b706c44"
+  integrity sha1-OQTBQ/qOs6ADDsZG0pAqLxtwbEQ=
 
 xml2js@^0.4.4:
   version "0.4.22"
